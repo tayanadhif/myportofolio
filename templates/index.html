@@ -12,11 +12,16 @@
 </head>
 <body>
     <header class="site-header">
-        <div class="container">
+        <div class="container header-inner">
             <a href="#profile" class="brand">Nadhif Aydin Adinandra</a>
-            <nav>
+            <nav aria-label="Main navigation">
                 <a href="#profile">Profile</a>
+                <a href="#portfolio">Portfolio</a>
+                <a href="#contact">Contact</a>
             </nav>
+            <button class="theme-toggle" type="button" aria-label="Toggle dark mode">
+                <span class="theme-toggle__icon">🌙</span>
+            </button>
         </div>
     </header>
 
@@ -53,15 +58,104 @@
                         </div>
                     </dl>
 
-                    <div class="social-links">
-                        <a href="https://www.youtube.com/@tayanadhif" class="social-link">YouTube</a>
-                        <a href="https://github.com/tayanadhif/" class="social-link">GitHub</a>
-                        <a href="https://www.linkedin.com/in/nadhif-aydin-adinandra-2202a137b/" class="social-link">LinkedIn</a>
-                        <a href="https://www.instagram.com/tayanadhif/" class="social-link">Instagram</a>
-                        <a href="https://www.tiktok.com/@tayanadhif" class="social-link">TikTok</a>
+                    <div class="social-links" aria-label="Social media links">
+                        <a href="https://www.youtube.com/@tayanadhif" class="social-link" target="_blank" rel="noreferrer">YouTube</a>
+                        <a href="https://github.com/tayanadhif/" class="social-link" target="_blank" rel="noreferrer">GitHub</a>
+                        <a href="https://www.linkedin.com/in/nadhif-aydin-adinandra-2202a137b/" class="social-link" target="_blank" rel="noreferrer">LinkedIn</a>
+                        <a href="https://www.instagram.com/tayanadhif/" class="social-link" target="_blank" rel="noreferrer">Instagram</a>
+                        <a href="https://www.tiktok.com/@tayanadhif" class="social-link" target="_blank" rel="noreferrer">TikTok</a>
                         <a href="mailto:tayanadhif@gmail.com" class="social-link">Email</a>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <section class="brand-strip" aria-label="Brand highlights">
+            <div class="container badge-row">
+                <span class="badge">💻 Python</span>
+                <span class="badge">🎮 Game Dev</span>
+                <span class="badge">📐 Math</span>
+                <span class="badge">🎧 Creator</span>
+                <span class="badge">🚀 Build</span>
+            </div>
+        </section>
+
+        <section class="projects" id="portfolio">
+            <div class="container">
+                <div class="section-heading">
+                    <p class="section-kicker">Portfolio</p>
+                    <h2>Selected work</h2>
+                </div>
+
+                <div class="projects-grid">
+                    <article class="project-card">
+                        <span class="project-number">01</span>
+                        <h3>Portfolio Website</h3>
+                        <p>Clean and modern personal branding site built with Django and custom CSS.</p>
+                        <span class="project-tech">Django / HTML / CSS</span>
+                    </article>
+
+                    <article class="project-card">
+                        <span class="project-number">02</span>
+                        <h3>Game Content</h3>
+                        <p>Longplay videos, gameplay edits, and creative content production for gaming channels.</p>
+                        <span class="project-tech">YouTube / Editing</span>
+                    </article>
+
+                    <article class="project-card">
+                        <span class="project-number">03</span>
+                        <h3>Programming Practice</h3>
+                        <p>Exploring problem solving, software engineering concepts, and algorithm design.</p>
+                        <span class="project-tech">Python / Logic</span>
+                    </article>
+
+                    <article class="project-card">
+                        <span class="project-number">04</span>
+                        <h3>Creative Experiments</h3>
+                        <p>Designing digital ideas and side projects that combine programming with visual storytelling.</p>
+                        <span class="project-tech">UI / Prototyping</span>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="contact" id="contact">
+            <div class="container contact-wrap">
+                <div class="contact-copy">
+                    <p class="section-kicker">Contact</p>
+                    <h2>Let’s build something</h2>
+                    <p>Have a project idea, collaboration request, or just want to say hello? Send a message and I’ll reply by email.</p>
+                </div>
+
+                <form class="contact-form" method="post">
+                    {% csrf_token %}
+                    <div class="field-row">
+                        <label>
+                            <span>Name</span>
+                            <input type="text" name="name" placeholder="Your name" required>
+                        </label>
+                    </div>
+
+                    <div class="field-row">
+                        <label>
+                            <span>Email</span>
+                            <input type="email" name="email" placeholder="your@email.com" required>
+                        </label>
+                    </div>
+
+                    <div class="field-row">
+                        <label>
+                            <span>Message</span>
+                            <textarea name="message" rows="5" placeholder="Write your message here..." required></textarea>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="submit-button">Send Message</button>
+
+                    {% if submitted %}
+                        <p class="success-message">Your message has been sent successfully.</p>
+                    {% endif %}
+                </form>
             </div>
         </section>
     </main>
@@ -71,5 +165,7 @@
             <p>&copy; 2026 Nadhif Aydin Adinandra. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
         </div>
     </footer>
+
+    <script src="{% static 'js/theme.js' %}"></script>
 </body>
 </html>

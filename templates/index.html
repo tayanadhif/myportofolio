@@ -156,7 +156,7 @@
                     <p>Have a project idea, collaboration request, or just want to say hello? Send a message and I’ll reply by email.</p>
                 </div>
 
-                <form class="contact-form" method="post">
+                <form class="contact-form" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="field-row">
                         <label>
@@ -179,10 +179,23 @@
                         </label>
                     </div>
 
+                    <div class="field-row">
+                        <label>
+                            <span>Attachment <small>(optional, max 5 MB)</small></span>
+                            <input type="file" name="attachment">
+                        </label>
+                    </div>
+
                     <button type="submit" class="submit-button">Send Message</button>
 
                     {% if submitted %}
                         <p class="success-message">Your message has been sent successfully.</p>
+                    {% endif %}
+                    {% if email_error %}
+                        <p class="error-message">Email service is not configured yet. Please try again later.</p>
+                    {% endif %}
+                    {% if attachment_error %}
+                        <p class="error-message">The attachment must be smaller than 5 MB.</p>
                     {% endif %}
                 </form>
             </div>

@@ -132,7 +132,7 @@ body.dark-mode .site-header {
 }
 
 .hero {
-    padding: 4.5rem 0 4rem;
+    padding: 4.5rem 0 2rem;
 }
 
 .hero-grid {
@@ -332,7 +332,7 @@ body.dark-mode .site-header {
     grid-template-columns: 0.9fr 1.1fr;
     gap: 2rem;
     align-items: start;
-    padding-top: 4rem;
+    padding-top: 5rem;
     border-top: 1px solid var(--line);
 }
 

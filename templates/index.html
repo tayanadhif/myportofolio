@@ -200,7 +200,7 @@
                         <p class="success-message">Your message has been sent successfully.</p>
                     {% endif %}
                     {% if email_error %}
-                        <p class="error-message">Email is not configured for local testing. Open the PWS website or add SMTP settings to .env.</p>
+                        <p class="error-message">Email service is unavailable. Please try again later.</p>
                     {% endif %}
                     {% if attachment_error %}
                         <p class="error-message">The attachment must be smaller than 50 MB.</p>

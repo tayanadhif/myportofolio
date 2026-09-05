@@ -3,6 +3,7 @@ from smtplib import SMTPException
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.shortcuts import render
+from django.utils import timezone
 
 
 MAX_ATTACHMENT_SIZE = 50 * 1024 * 1024
@@ -16,6 +17,7 @@ def landing_page(request):
     if request.method == "POST":
         name = (request.POST.get("name") or "").strip()
         email = (request.POST.get("email") or "").strip()
+        subject = (request.POST.get("subject") or "Portfolio contact form message").strip()
         message = (request.POST.get("message") or "").strip()
         attachment = request.FILES.get("attachment")
 
@@ -27,11 +29,20 @@ def landing_page(request):
             else:
                 try:
                     email_message = EmailMessage(
-                        subject=f"Portfolio inquiry from {name}",
+                        subject=f"New Contact Form Message: {subject}",
                         body=(
-                            f"Name: {name}\n"
-                            f"Email: {email}\n\n"
-                            f"Message:\n{message}"
+                            f"New Contact Form Message: {subject}\n\n"
+                            f"{timezone.localtime():%Y-%m-%d %H:%M:%S}\n\n"
+                            f"Hello Nadhif Aydin Adinandra,\n\n"
+                            "You got a new message from your portfolio website:\n\n"
+                            f"From: {name}\n"
+                            f"Email: {email}\n"
+                            f"Subject: {subject}\n\n"
+                            f"Message:\n{message}\n\n"
+                            "This message was sent from your portfolio contact form.\n"
+                            f"Reply directly to: {email}\n\n"
+                            "Best wishes,\n"
+                            "Cartoon Studio"
                         ),
                         from_email=settings.DEFAULT_FROM_EMAIL,
                         to=[settings.RECEIVER_EMAIL],

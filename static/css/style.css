@@ -292,6 +292,18 @@ body.dark-mode .site-header {
     box-shadow: 0 10px 22px var(--shadow);
 }
 
+.project-image-link {
+    display: block;
+    margin: -1.5rem -1.5rem 1.25rem;
+}
+
+.project-image {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: var(--radius) var(--radius) 0 0;
+}
+
 .project-card:hover {
     transform: translateY(-4px);
     border-color: var(--accent);
@@ -372,7 +384,7 @@ body.dark-mode .site-header {
 }
 
 .education-section {
-    padding-top: 0;
+    padding-top: 2rem;
 }
 
 .education-list {
@@ -394,6 +406,56 @@ body.dark-mode .site-header {
 
 .education-item .education-year {
     margin-bottom: 0;
+}
+
+.achievements-section {
+    padding-top: 2rem;
+}
+
+.achievement-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.achievement-card {
+    background: var(--panel-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: 0 10px 22px var(--shadow);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.achievement-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+}
+
+.achievement-mark {
+    display: inline-block;
+    color: var(--accent-dark);
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    margin-bottom: 1.25rem;
+}
+
+.achievement-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.7rem;
+}
+
+.achievement-card p {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    margin-bottom: 1.1rem;
+}
+
+.achievement-label {
+    color: var(--text);
+    font-size: 0.8rem;
+    font-weight: 700;
 }
 
 .contact {
@@ -499,7 +561,7 @@ body.dark-mode .site-header {
         grid-template-columns: 1fr;
     }
 
-    .timeline-grid {
+    .timeline-grid, .achievement-grid {
         grid-template-columns: 1fr;
     }
 
@@ -558,4 +620,27 @@ body.dark-mode .site-header {
 .submit-button:hover {
     background-color: var(--accent);
     transform: translateY(-2px);
+}
+
+.project-title-link {
+    color: var(--text);
+    text-decoration: none;
+}
+
+.project-title-link:hover {
+    color: var(--accent);
+}
+
+.project-link {
+    display: inline-block;
+    margin-top: 1.25rem;
+    color: var(--accent-dark);
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.project-link:hover {
+    color: var(--accent);
+    text-decoration: underline;
 }

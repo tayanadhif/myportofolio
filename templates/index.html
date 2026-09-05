@@ -17,6 +17,8 @@
             <nav aria-label="Main navigation">
                 <a href="#profile">Profile</a>
                 <a href="#portfolio">Portfolio</a>
+                <a href="#experience">Experience</a>
+                <a href="#education">Education</a>
                 <a href="#contact">Contact</a>
             </nav>
             <button class="theme-toggle" type="button" aria-label="Toggle dark mode">
@@ -84,7 +86,7 @@
         <section class="projects" id="portfolio">
             <div class="container">
                 <div class="section-heading">
-                    <p class="section-kicker">Portfolio</p>
+                    <p class="section-kicker">Skill</p>
                     <h2>Selected work</h2>
                 </div>
 
@@ -143,6 +145,95 @@
                         <h3>Video Editing</h3>
                         <p>Creating and editing gaming videos and other digital content, combining gameplay footage with editing techniques to produce engaging videos.</p>
                         <span class="project-tech">Video Editing &middot; Content Creation</span>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="resume-section" id="experience">
+            <div class="container">
+                <div class="section-heading">
+                    <p class="section-kicker">Experience</p>
+                    <h2>What I do</h2>
+                </div>
+
+                <div class="timeline-grid">
+                    <article class="timeline-item">
+                        <span class="timeline-period">Current</span>
+                        <h3>Computer Science Student</h3>
+                        <p class="timeline-place">Universitas Indonesia</p>
+                        <p>Building programming, problem-solving, and software development skills through coursework and personal projects.</p>
+                    </article>
+
+                    <article class="timeline-item">
+                        <span class="timeline-period">Ongoing</span>
+                        <h3>Gaming Content Creator</h3>
+                        <p class="timeline-place">YouTube</p>
+                        <p>Creating gameplay videos, longplays, and gaming projects while developing skills in editing and digital content production.</p>
+                    </article>
+
+                    <article class="timeline-item">
+                        <span class="timeline-period">Ongoing</span>
+                        <h3>Math Teaching</h3>
+                        <p class="timeline-place">Independent activity</p>
+                        <p>Helping students understand mathematical concepts through clear explanations, examples, and problem-solving practice.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="resume-section education-section" id="education">
+            <div class="container">
+                <div class="section-heading">
+                    <p class="section-kicker">Education</p>
+                    <h2>Learning path</h2>
+                </div>
+
+                <div class="education-list">
+                    <article class="education-item">
+                        <img class="education-logo" src="{% static 'img/logo-sd-sukmajaya.png' %}" alt="Logo SD Negeri Sukmajaya 5">
+                        <div class="education-year">Completed</div>
+                        <div>
+                            <h3>Elementary School (2013-2019)</h3>
+                            <p class="timeline-place">SD Negeri Sukmajaya 5</p>
+                            <p>Built my early academic foundation while developing an interest in mathematics, science, and learning new things.</p>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="education-list">
+                    <article class="education-item">
+                        <img class="education-logo" src="{% static 'img/logo-smp-depok.png' %}" alt="Logo SMP Negeri 2 Depok">
+                        <div class="education-year">Completed</div>
+                        <div>
+                            <h3>Junior High School (2019-2022)</h3>
+                            <p class="timeline-place">SMP Negeri 2 Depok</p>
+                            <p>Continued developing my academic skills while exploring mathematics, science, and problem-solving activities.</p>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="education-list">
+                    <article class="education-item">
+                        <img class="education-logo" src="{% static 'img/logo-sma-depok.png' %}" alt="Logo SMA Negeri 1 Depok">
+                        <div class="education-year">Completed</div>
+                        <div>
+                            <h3>Senior High School (2022-2025)</h3>
+                            <p class="timeline-place">SMA Negeri 1 Depok</p>
+                            <p>Strengthened my interest in mathematics and science while preparing for further studies in computer science.</p>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="education-list">
+                    <article class="education-item">
+                        <img class="education-logo" src="{% static 'img/logo-ui.png' %}" alt="Logo Universitas Indonesia">
+                        <div class="education-year">Current</div>
+                        <div>
+                            <h3>S1 Ilmu Komputer (2025-Present)</h3>
+                            <p class="timeline-place">Universitas Indonesia</p>
+                            <p>Studying computer science with interests in programming, mathematics, game development, and digital projects.</p>
+                        </div>
                     </article>
                 </div>
             </div>

@@ -323,6 +323,79 @@ body.dark-mode .site-header {
     color: var(--text);
 }
 
+.resume-section {
+    padding: 4rem 0 5rem;
+    border-top: 1px solid var(--line);
+}
+
+.timeline-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.timeline-item, .education-item {
+    background: var(--panel-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 22px var(--shadow);
+}
+
+.timeline-item {
+    padding: 1.5rem;
+}
+
+.timeline-period, .education-year {
+    display: inline-block;
+    color: var(--accent-dark);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1.1rem;
+}
+
+.timeline-item h3, .education-item h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.3rem;
+}
+
+.timeline-place {
+    color: var(--text);
+    font-weight: 700;
+    margin-bottom: 0.85rem;
+}
+
+.timeline-item p:last-child, .education-item p:last-child {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+}
+
+.education-section {
+    padding-top: 0;
+}
+
+.education-list {
+    max-width: 760px;
+}
+
+.education-item {
+    display: grid;
+    grid-template-columns: 64px 120px 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.education-logo {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+}
+
+.education-item .education-year {
+    margin-bottom: 0;
+}
+
 .contact {
     padding: 0 0 5rem;
 }
@@ -426,6 +499,10 @@ body.dark-mode .site-header {
         grid-template-columns: 1fr;
     }
 
+    .timeline-grid {
+        grid-template-columns: 1fr;
+    }
+
     .projects-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -446,6 +523,19 @@ body.dark-mode .site-header {
 
     .brand {
         font-size: 1rem;
+    }
+
+    .education-item {
+        grid-template-columns: 64px 1fr;
+        gap: 0.25rem;
+    }
+
+    .education-item .education-year {
+        grid-column: 2;
+    }
+
+    .education-item > div:last-child {
+        grid-column: 1 / -1;
     }
 }
 

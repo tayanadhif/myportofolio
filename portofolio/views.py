@@ -5,7 +5,7 @@ from django.core.mail import EmailMessage
 from django.shortcuts import render
 
 
-MAX_ATTACHMENT_SIZE = 5 * 1024 * 1024
+MAX_ATTACHMENT_SIZE = 50 * 1024 * 1024
 
 
 def landing_page(request):
@@ -25,12 +25,12 @@ def landing_page(request):
             else:
                 try:
                     email_message = EmailMessage(
-                    subject=f"Portfolio inquiry from {name}",
+                        subject=f"Portfolio inquiry from {name}",
                         body=(
-                        f"Name: {name}\n"
-                        f"Email: {email}\n\n"
-                        f"Message:\n{message}"
-                    ),
+                            f"Name: {name}\n"
+                            f"Email: {email}\n\n"
+                            f"Message:\n{message}"
+                        ),
                         from_email=settings.DEFAULT_FROM_EMAIL,
                         to=[settings.RECEIVER_EMAIL],
                         reply_to=[email],

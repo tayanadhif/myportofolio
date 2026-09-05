@@ -17,8 +17,13 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from .env
-load_dotenv(BASE_DIR / '.env')
+# Use the production file when PRODUCTION is supplied by the hosting platform.
+environment_file = (
+    BASE_DIR / '.env.prod'
+    if os.getenv('PRODUCTION', '').lower() == 'true'
+    else BASE_DIR / '.env'
+)
+load_dotenv(environment_file)
 
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 

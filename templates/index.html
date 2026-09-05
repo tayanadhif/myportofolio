@@ -154,9 +154,10 @@
                     <p class="section-kicker">Contact</p>
                     <h2>Let’s build something</h2>
                     <p>Have a project idea, collaboration request, or just want to say hello? Send a message and I’ll reply by email.</p>
+                    <a href="mailto:tayanadhif@gmail.com?subject=Portfolio%20inquiry" class="social-link">Open email app instead</a>
                 </div>
 
-                <form class="contact-form" method="post" enctype="multipart/form-data">
+                <form id="contact-form" class="contact-form" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="field-row">
                         <label>
@@ -181,7 +182,7 @@
 
                     <div class="field-row">
                         <label>
-                            <span>Attachment <small>(optional, max 5 MB)</small></span>
+                            <span>Attachment <small>(optional, max 50 MB)</small></span>
                             <input type="file" name="attachment">
                         </label>
                     </div>
@@ -195,7 +196,7 @@
                         <p class="error-message">Email service is not configured yet. Please try again later.</p>
                     {% endif %}
                     {% if attachment_error %}
-                        <p class="error-message">The attachment must be smaller than 5 MB.</p>
+                        <p class="error-message">The attachment must be smaller than 50 MB.</p>
                     {% endif %}
                 </form>
             </div>

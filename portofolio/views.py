@@ -20,7 +20,9 @@ def landing_page(request):
         attachment = request.FILES.get("attachment")
 
         if name and email and message:
-            if attachment and attachment.size > MAX_ATTACHMENT_SIZE:
+            if settings.EMAIL_BACKEND == "django.core.mail.backends.console.EmailBackend":
+                email_error = True
+            elif attachment and attachment.size > MAX_ATTACHMENT_SIZE:
                 attachment_error = True
             else:
                 try:

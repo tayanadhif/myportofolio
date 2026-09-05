@@ -1,4 +1,5 @@
 from smtplib import SMTPException
+import logging
 
 from django.conf import settings
 from django.core.mail import EmailMessage
@@ -7,6 +8,7 @@ from django.utils import timezone
 
 
 MAX_ATTACHMENT_SIZE = 50 * 1024 * 1024
+logger = logging.getLogger(__name__)
 
 
 def landing_page(request):
@@ -57,6 +59,7 @@ def landing_page(request):
                     submitted = email_message.send(fail_silently=False) == 1
                     email_error = not submitted
                 except (OSError, SMTPException):
+                    logger.exception("Portfolio contact email delivery failed")
                     email_error = True
 
     return render(

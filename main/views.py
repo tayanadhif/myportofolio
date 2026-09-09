@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from main.models import Experience
+from main.models import Experience, PortfolioItem
 
 
 def show_main(request):
@@ -43,3 +43,12 @@ def show_experience(request):
     }
 
     return render(request, "experience.html", context)
+
+
+def show_portfolio(request):
+    context = {
+        "name": "Nadhif Aydin Adinandra",
+        "portfolio_items": PortfolioItem.objects.order_by("created_at"),
+    }
+
+    return render(request, "portfolio.html", context)

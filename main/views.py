@@ -16,9 +16,30 @@ def show_main(request):
 
 
 def show_experience(request):
+    experience_list = list(Experience.objects.all())
+
+    if not experience_list:
+        experience_list = [
+            Experience(
+                title="Computer Science Student",
+                description="Building programming, problem-solving, and software development skills through coursework and personal projects.",
+                category="full-time",
+            ),
+            Experience(
+                title="Gaming Content Creator",
+                description="Creating gameplay videos, longplays, and gaming projects while developing skills in editing and digital content production.",
+                category="freelance",
+            ),
+            Experience(
+                title="Math Teaching",
+                description="Helping students understand mathematical concepts through clear explanations, examples, and problem-solving practice.",
+                category="volunteer",
+            ),
+        ]
+
     context = {
         "name": "Nadhif Aydin Adinandra",
-        "experience_list": Experience.objects.all(),
+        "experience_list": experience_list,
     }
 
     return render(request, "experience.html", context)

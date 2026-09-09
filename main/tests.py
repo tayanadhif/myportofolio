@@ -42,10 +42,12 @@ class MainTest(TestCase):
 		self.assertContains(response, "Sedang berlangsung")
 		self.assertContains(response, f'href="{reverse("main:show_main")}"')
 
-	def test_empty_experience_page(self):
+	def test_empty_experience_page_uses_fallback_content(self):
 		Experience.objects.all().delete()
 		response = self.client.get(reverse("main:show_experience"))
-		self.assertContains(response, "Belum ada pengalaman yang ditambahkan.")
+		self.assertContains(response, "Computer Science Student")
+		self.assertContains(response, "Gaming Content Creator")
+		self.assertContains(response, "Math Teaching")
 
 	def test_completed_experience(self):
 		self.experience.ended_at = timezone.now()

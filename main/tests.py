@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from main.models import Experience
+from main.models import Experience, PortfolioItem
 
 
 class MainTest(TestCase):
@@ -56,3 +56,30 @@ class MainTest(TestCase):
 		self.assertFalse(self.experience.is_ongoing)
 		self.assertContains(response, "Selesai")
 		self.assertNotContains(response, "Sedang berlangsung")
+
+	def test_portfolio_page_is_accessible_and_uses_portfolio_template(self):
+		response = self.client.get(reverse("main:show_portfolio"))
+		self.assertEqual(response.status_code, 200)
+		self.assertTemplateUsed(response, "portfolio.html")
+		self.assertContains(response, "Portfolio")
+		self.assertContains(response, "Belum ada item portofolio yang ditambahkan.")
+
+	def test_portfolio_page_displays_model_data_when_items_exist(self):
+		portfolio_item = PortfolioItem.objects.create(
+			title="Project Demo",
+			description="Demo project for portfolio showcase.",
+			category="featured",
+			link="https://example.com/demo",
+		)
+		response = self.client.get(reverse("main:show_portfolio"))
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, portfolio_item.title)
+		self.assertContains(response, portfolio_item.description)
+		self.assertContains(response, portfolio_item.category)
+		self.assertContains(response, portfolio_item.link)
+
+	def test_portfolio_page_shows_empty_state_when_no_data_exists(self):
+		PortfolioItem.objects.all().delete()
+		response = self.client.get(reverse("main:show_portfolio"))
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Belum ada item portofolio yang ditambahkan.")

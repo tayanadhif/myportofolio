@@ -46,9 +46,26 @@ def show_experience(request):
 
 
 def show_portfolio(request):
+    portfolio_items = list(PortfolioItem.objects.order_by("created_at"))
+
+    if not portfolio_items:
+        portfolio_items = [
+            PortfolioItem(
+                title="Portfolio Website",
+                description="A personal portfolio website built with Django to present my profile, experience, and projects.",
+                category="featured",
+                link="https://nadhif-aydin-myportofolio.pws.cs.ui.ac.id/",
+            ),
+            PortfolioItem(
+                title="Game Development",
+                description="Creating gameplay videos, longplays, and gaming projects while developing editing and digital content production skills.",
+                category="game",
+            ),
+        ]
+
     context = {
         "name": "Nadhif Aydin Adinandra",
-        "portfolio_items": PortfolioItem.objects.order_by("created_at"),
+        "portfolio_items": portfolio_items,
     }
 
     return render(request, "portfolio.html", context)

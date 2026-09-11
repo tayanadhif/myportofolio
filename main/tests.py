@@ -62,7 +62,7 @@ class MainTest(TestCase):
 		self.assertEqual(response.status_code, 200)
 		self.assertTemplateUsed(response, "portfolio.html")
 		self.assertContains(response, "Portfolio")
-		self.assertContains(response, "Belum ada item portofolio yang ditambahkan.")
+		self.assertContains(response, "Portfolio Website")
 
 	def test_portfolio_page_displays_model_data_when_items_exist(self):
 		portfolio_item = PortfolioItem.objects.create(
@@ -78,8 +78,9 @@ class MainTest(TestCase):
 		self.assertContains(response, portfolio_item.category)
 		self.assertContains(response, portfolio_item.link)
 
-	def test_portfolio_page_shows_empty_state_when_no_data_exists(self):
+	def test_portfolio_page_shows_fallback_items_when_no_data_exists(self):
 		PortfolioItem.objects.all().delete()
 		response = self.client.get(reverse("main:show_portfolio"))
 		self.assertEqual(response.status_code, 200)
-		self.assertContains(response, "Belum ada item portofolio yang ditambahkan.")
+		self.assertContains(response, "Portfolio Website")
+		self.assertContains(response, "Game Development")

@@ -84,3 +84,37 @@ class MainTest(TestCase):
 		self.assertEqual(response.status_code, 200)
 		self.assertContains(response, "Portfolio Website")
 		self.assertContains(response, "Game Development")
+
+	def test_portfolio_json_api_returns_serialized_items(self):
+		PortfolioItem.objects.create(
+			title="Project Demo",
+			description="Demo project for portfolio showcase.",
+			category="featured",
+			link="https://example.com/demo",
+		)
+		response = self.client.get(reverse("main:get_portfolio_json"))
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response["Content-Type"], "application/json")
+		self.assertContains(response, "Project Demo")
+
+	def test_create_portfolio_item_via_form(self):
+		response = self.client.post(
+			reverse("main:create_portfolio_item"),
+			{
+				"title": "New Demo Item",
+				"description": "This item is created through the form.",
+				"category": "featured",
+				"link": "https://example.com/new-demo",
+			},
+		)
+		self.assertEqual(response.status_code, 302)
+		self.assertTrue(PortfolioItem.objects.filter(title="New Demo Item").exists())
+
+	def test_project_style_routes_are_available(self):
+		response = self.client.get(reverse("main:show_projects"))
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Portfolio")
+
+		create_response = self.client.get(reverse("main:create_project"))
+		self.assertEqual(create_response.status_code, 200)
+		self.assertContains(create_response, "Tambah Project")

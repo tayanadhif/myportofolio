@@ -1,0 +1,44 @@
+<p class="experience-status">
+    <button type="button"
+            class="button button-danger"
+            popovertarget="delete-portfolio-{{ item.id }}"
+            aria-label="Hapus {{ item.title }}"
+            title="Hapus item portofolio">
+        Hapus
+    </button>
+</p>
+
+<div id="delete-portfolio-{{ item.id }}"
+     class="project-delete-modal"
+     popover="auto"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="delete-portfolio-title-{{ item.id }}">
+    <button type="button"
+            class="project-delete-modal__backdrop"
+            popovertarget="delete-portfolio-{{ item.id }}"
+            popovertargetaction="hide"
+            aria-label="Tutup konfirmasi hapus"></button>
+    <div class="project-delete-modal__content">
+        <button type="button"
+                class="project-delete-modal__close"
+                popovertarget="delete-portfolio-{{ item.id }}"
+                popovertargetaction="hide"
+                aria-label="Tutup konfirmasi hapus">×</button>
+        <h2 id="delete-portfolio-title-{{ item.id }}">Hapus Portfolio?</h2>
+        <p>
+            Apakah Anda yakin ingin menghapus
+            <strong>{{ item.title }}</strong>?
+        </p>
+        <div class="project-delete-modal__actions">
+            <button type="button"
+                    class="button button-secondary"
+                    popovertarget="delete-portfolio-{{ item.id }}"
+                    popovertargetaction="hide">Batal</button>
+            <form method="post" action="{% url 'main:delete_portfolio_item' item.id %}">
+                {% csrf_token %}
+                <button type="submit" class="button button-danger">Ya, Hapus</button>
+            </form>
+        </div>
+    </div>
+</div>

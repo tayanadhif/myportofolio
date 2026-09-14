@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Tambah Portfolio - {{ name }}{% endblock %}
+
+{% block content %}
+<section class="experience-section" id="portfolio-form">
+    <div class="container">
+        <p class="section-kicker">Tambah item</p>
+        <h1>Tambah Portfolio</h1>
+
+        <form method="post" action="{% url 'main:create_portfolio_item' %}" class="project-form">
+            {% csrf_token %}
+
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}
+                <p class="form-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+            <div class="form-actions">
+                <button type="submit" class="button">Tambah Portfolio</button>
+                <a href="{% url 'main:show_portfolio' %}" class="button button-secondary">Batal</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

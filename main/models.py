@@ -46,6 +46,9 @@ class PortfolioItem(models.Model):
     description = models.TextField()
     category = models.CharField(max_length=50, default='featured')
     link = models.URLField(blank=True, null=True)
+    tech_stack = models.CharField(max_length=255, blank=True, default='')
+    project_url = models.URLField(blank=True, null=True)
+    project_image_url = models.URLField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

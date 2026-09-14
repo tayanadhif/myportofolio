@@ -29,23 +29,49 @@
         <section class="experience-section" id="portfolio">
             <div class="container">
                 <p class="section-kicker">Pilihan portofolio</p>
-                <h1>Portfolio</h1>
+
+                <div class="project-header">
+                    <h1>Portfolio</h1>
+                    <a href="{% url 'main:create_portfolio_item' %}" class="button project-add-button">
+                        <span aria-hidden="true">+</span>
+                        Tambah Portfolio
+                    </a>
+                </div>
+
+                <form method="get" action="{% url 'main:show_portfolio' %}" class="project-search">
+                    <input type="search"
+                           name="title"
+                           value="{{ title_query }}"
+                           placeholder="Cari berdasarkan judul portfolio"
+                           class="project-search__input"
+                           aria-label="Cari berdasarkan judul portfolio">
+                    <button type="submit" class="button">Cari</button>
+                </form>
 
                 {% if portfolio_items %}
-                    <div class="experience-grid">
+                    <div class="experience-grid project-grid">
                         {% for item in portfolio_items %}
                         <article class="experience-card">
                             <span class="experience-category">{{ item.category }}</span>
                             <h2>{{ item.title }}</h2>
                             <p class="experience-description">{{ item.description }}</p>
-                            {% if item.link %}
-                            <p><a href="{{ item.link }}" target="_blank" rel="noreferrer">Lihat detail</a></p>
-                            {% endif %}
+                            <div class="project-card-actions">
+                                <div class="project-actions">
+                                    {% if item.link %}
+                                    <a href="{{ item.link }}" class="button" target="_blank" rel="noreferrer">Lihat detail</a>
+                                    {% endif %}
+                                    {% include "components/portfolio_delete_modal.html" with item=item %}
+                                </div>
+                            </div>
                         </article>
                         {% endfor %}
                     </div>
                 {% else %}
+                    {% if title_query %}
+                    <p class="empty-state">Tidak ada portfolio dengan judul tersebut.</p>
+                    {% else %}
                     <p class="empty-state">Belum ada item portofolio yang ditambahkan.</p>
+                    {% endif %}
                 {% endif %}
             </div>
         </section>

@@ -11,6 +11,13 @@
     --shadow: rgba(28, 25, 23, 0.08);
     --radius: 14px;
     --button-text: #fdf8f4;
+    --project-panel: #f5efea;
+    --project-panel-border: #4b2f6b;
+    --project-panel-line: #d6c7b8;
+    --project-panel-text: #1f1c1a;
+    --field-bg: rgba(255, 255, 255, 0.9);
+    --field-text: #1f1c1a;
+    --field-border: #d95d39;
 }
 
 body.dark-mode {
@@ -25,6 +32,13 @@ body.dark-mode {
     --text-muted: #c4cbd7;
     --shadow: rgba(0, 0, 0, 0.28);
     --button-text: #111827;
+    --project-panel: #172033;
+    --project-panel-border: #f59e0b;
+    --project-panel-line: rgba(255, 255, 255, 0.12);
+    --project-panel-text: #f4f4f5;
+    --field-bg: rgba(15, 23, 42, 0.96);
+    --field-text: #f4f4f5;
+    --field-border: #f59e0b;
 }
 
 * {
@@ -605,12 +619,13 @@ body.dark-mode .site-header {
 
 .project-page-container,
 .project-form-container {
-    background: #f5efea;
-    border: 3px solid #4b2f6b;
+    background: var(--project-panel);
+    border: 3px solid var(--project-panel-border);
     border-radius: 0;
     box-shadow: none;
-    padding: 2rem 1.5rem;
-    max-width: 1040px;
+    padding: 2rem 1.5rem 2.5rem;
+    max-width: 1060px;
+    color: var(--project-panel-text);
 }
 
 .project-form-message {
@@ -624,25 +639,29 @@ body.dark-mode .site-header {
 }
 
 .project-form-title {
-    text-align: center;
+    text-align: left;
     margin-bottom: 1.5rem;
-    font-size: clamp(2.2rem, 4vw, 3rem);
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    line-height: 0.95;
+    color: var(--project-panel-text);
 }
 
 .project-form {
     width: 100%;
-    max-width: 760px;
+    max-width: 100%;
     margin: 0 auto;
 }
 
 .form-group {
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.55rem;
+    font-size: 1.05rem;
     font-weight: 700;
+    color: var(--project-panel-text);
 }
 
 .project-form-container .form-group label {
@@ -656,12 +675,31 @@ body.dark-mode .site-header {
     width: 100%;
     box-sizing: border-box;
     padding: 0.7rem;
-    border: 1px solid #d95d39;
+    border: 1px solid var(--field-border);
     border-radius: var(--radius);
     font: inherit;
-    transition: border-color 0.2s ease, outline-color 0.2s ease;
-    background: rgba(255, 255, 255, 0.9);
-    color: var(--text);
+    transition: border-color 0.2s ease, outline-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+    background: var(--field-bg);
+    color: var(--field-text);
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group textarea,
+body.dark-mode .form-group select,
+body.dark-mode .project-search__input,
+body.dark-mode .contact-form input,
+body.dark-mode .contact-form textarea {
+    background: var(--field-bg);
+    color: var(--field-text);
+    border-color: var(--field-border);
+}
+
+body.dark-mode .form-group input::placeholder,
+body.dark-mode .form-group textarea::placeholder,
+body.dark-mode .project-search__input::placeholder,
+body.dark-mode .contact-form input::placeholder,
+body.dark-mode .contact-form textarea::placeholder {
+    color: var(--text-muted);
 }
 
 .form-group input:focus,
@@ -701,7 +739,9 @@ body.dark-mode .site-header {
 }
 
 .button-secondary {
-    background: var(--ink);
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--text);
 }
 
 .button-danger {
@@ -715,12 +755,14 @@ body.dark-mode .site-header {
     align-items: center;
     gap: 1rem;
     margin-bottom: 1.5rem;
-    border-bottom: 1px solid #d6c7b8;
+    border-bottom: 1px solid var(--project-panel-line);
     padding-bottom: 0.85rem;
 }
 
 .project-header h1 {
     margin-bottom: 0;
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1;
 }
 
 .project-grid {
@@ -750,16 +792,18 @@ body.dark-mode .site-header {
     display: flex;
     gap: 0.75rem;
     margin-bottom: 1.5rem;
+    align-items: center;
 }
 
 .project-search__input {
     width: 100%;
     min-width: 0;
+    min-height: 48px;
     padding: 0.7rem;
-    border: 1px solid var(--line);
+    border: 1px solid var(--field-border);
     border-radius: var(--radius);
-    background: #fff;
-    color: var(--ink);
+    background: var(--field-bg);
+    color: var(--field-text);
     font: inherit;
 }
 

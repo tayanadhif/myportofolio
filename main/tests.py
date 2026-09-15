@@ -97,6 +97,19 @@ class MainTest(TestCase):
 		self.assertEqual(response["Content-Type"], "application/json")
 		self.assertContains(response, "Project Demo")
 
+	def test_portfolio_xml_api_returns_serialized_items(self):
+		PortfolioItem.objects.create(
+			title="Project Demo",
+			description="Demo project for portfolio showcase.",
+			category="featured",
+			link="https://example.com/demo",
+		)
+		response = self.client.get(reverse("main:get_portfolio_xml"))
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response["Content-Type"], "application/xml")
+		self.assertContains(response, "Project Demo")
+		self.assertContains(response, "<object")
+
 	def test_create_portfolio_item_via_form(self):
 		response = self.client.post(
 			reverse("main:create_portfolio_item"),

@@ -94,6 +94,17 @@ def get_portfolio_json(request):
     return HttpResponse(portfolio_items_json, content_type="application/json")
 
 
+def get_portfolio_xml(request):
+    title_query = request.GET.get("title", "").strip()
+    portfolio_items = PortfolioItem.objects.all()
+
+    if title_query:
+        portfolio_items = portfolio_items.filter(title__icontains=title_query)
+
+    portfolio_items_xml = serializers.serialize("xml", portfolio_items)
+    return HttpResponse(portfolio_items_xml, content_type="application/xml")
+
+
 def create_portfolio_item(request):
     form = PortfolioItemForm(request.POST or None)
 
@@ -138,6 +149,10 @@ def show_projects(request):
 
 def get_projects_json(request):
     return get_portfolio_json(request)
+
+
+def get_projects_xml(request):
+    return get_portfolio_xml(request)
 
 
 def create_project(request):

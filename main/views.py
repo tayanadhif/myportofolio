@@ -116,6 +116,28 @@ def create_portfolio_item(request):
     context = {
         "name": "Nadhif Aydin Adinandra",
         "form": form,
+        "form_action_url": "main:create_portfolio_item",
+        "submit_button_text": "Tambah Portfolio",
+    }
+
+    return render(request, "portfolio_form.html", context)
+
+
+def update_portfolio_item(request, portfolio_id):
+    portfolio_item = get_object_or_404(PortfolioItem, pk=portfolio_id)
+    form = PortfolioItemForm(request.POST or None, instance=portfolio_item)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Portfolio berhasil diperbarui!")
+        return redirect("main:show_portfolio")
+
+    context = {
+        "name": "Nadhif Aydin Adinandra",
+        "form": form,
+        "form_action_url": "main:update_portfolio_item",
+        "submit_button_text": "Simpan Perubahan",
+        "update_object": portfolio_item,
     }
 
     return render(request, "portfolio_form.html", context)
@@ -166,9 +188,75 @@ def create_project(request):
     context = {
         "name": "Nadhif Aydin Adinandra",
         "form": form,
+        "form_action_url": "main:create_project",
+        "submit_button_text": "Tambah Project",
     }
 
     return render(request, "projects_form.html", context)
+
+
+def update_project(request, project_id):
+    project_item = get_object_or_404(PortfolioItem, pk=project_id)
+    form = PortfolioItemForm(request.POST or None, instance=project_item)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Project berhasil diperbarui!")
+        return redirect("main:show_projects")
+
+    context = {
+        "name": "Nadhif Aydin Adinandra",
+        "form": form,
+        "form_action_url": "main:update_project",
+        "submit_button_text": "Simpan Perubahan",
+        "update_object": project_item,
+    }
+
+    return render(request, "projects_form.html", context)
+
+
+def show_portfolio_deserialized(request):
+    portfolio_items = list(PortfolioItem.objects.all().order_by("created_at"))
+
+    if request.GET.get("title"):
+        portfolio_items = list(
+            PortfolioItem.objects.filter(title__icontains=request.GET.get("title", "").strip())
+            .order_by("created_at")
+        )
+
+    json_response = get_portfolio_json(request)
+    serialized_data = json_response.content.decode("utf-8")
+    deserialized_objects = list(serializers.deserialize("json", serialized_data))
+    portfolio_items = [item.object for item in deserialized_objects] or portfolio_items
+
+    context = {
+        "name": "Nadhif Aydin Adinandra",
+        "portfolio_items": portfolio_items,
+    }
+
+    return render(request, "portfolio_deserialized.html", context)
+
+
+def show_projects_deserialized(request):
+    project_list = list(PortfolioItem.objects.all().order_by("created_at"))
+
+    if request.GET.get("title"):
+        project_list = list(
+            PortfolioItem.objects.filter(title__icontains=request.GET.get("title", "").strip())
+            .order_by("created_at")
+        )
+
+    json_response = get_projects_json(request)
+    serialized_data = json_response.content.decode("utf-8")
+    deserialized_objects = list(serializers.deserialize("json", serialized_data))
+    project_list = [item.object for item in deserialized_objects] or project_list
+
+    context = {
+        "name": "Nadhif Aydin Adinandra",
+        "project_list": project_list,
+    }
+
+    return render(request, "project_deserialized.html", context)
 
 
 def delete_project(request, project_id):

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Projects JSON - {{ name }}{% endblock %}
+
+{% block content %}
+<section class="experience-section" id="project-deserialized">
+    <div class="container">
+        <p class="section-kicker">Data JSON yang sudah di-deserialisasi</p>
+        <div class="project-header">
+            <h1>Projects Terdeserialisasi</h1>
+        </div>
+
+        {% if project_list %}
+        <div class="experience-grid project-grid">
+            {% for project in project_list %}
+            <article class="experience-card">
+                {% if project.project_image_url %}
+                <img src="{{ project.project_image_url }}" alt="Gambar {{ project.title }}" class="project-image">
+                {% endif %}
+                <h2>{{ project.title }}</h2>
+                <span class="experience-category">{{ project.tech_stack }}</span>
+                <p class="experience-description">{{ project.description }}</p>
+                {% if project.project_url %}
+                <p><a href="{{ project.project_url }}" target="_blank" rel="noreferrer">{{ project.project_url }}</a></p>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state">Belum ada data project yang tersedia untuk di-deserialisasi.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

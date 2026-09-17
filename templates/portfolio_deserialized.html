@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Portfolio JSON - {{ name }}{% endblock %}
+
+{% block content %}
+<section class="experience-section" id="portfolio-deserialized">
+    <div class="container">
+        <p class="section-kicker">Data JSON yang sudah di-deserialisasi</p>
+        <div class="project-header">
+            <h1>Portfolio Terdeserialisasi</h1>
+        </div>
+
+        {% if portfolio_items %}
+        <div class="experience-grid project-grid">
+            {% for item in portfolio_items %}
+            <article class="experience-card">
+                <span class="experience-category">{{ item.category }}</span>
+                <h2>{{ item.title }}</h2>
+                <p class="experience-description">{{ item.description }}</p>
+                {% if item.link %}
+                <p><a href="{{ item.link }}" target="_blank" rel="noreferrer">{{ item.link }}</a></p>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state">Belum ada data yang tersedia untuk di-deserialisasi.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

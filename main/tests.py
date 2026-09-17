@@ -124,6 +124,43 @@ class MainTest(TestCase):
 		self.assertEqual(response.status_code, 302)
 		self.assertTrue(PortfolioItem.objects.filter(title="New Demo Item").exists())
 
+	def test_update_portfolio_item_via_form(self):
+		portfolio_item = PortfolioItem.objects.create(
+			title="Old Title",
+			description="Old description",
+			category="featured",
+			link="https://example.com/old",
+		)
+
+		response = self.client.post(
+			reverse("main:update_portfolio_item", args=[portfolio_item.pk]),
+			{
+				"title": "Updated Title",
+				"description": "Updated description",
+				"tech_stack": "Django, Python",
+				"project_url": "https://example.com/updated",
+				"project_image_url": "https://example.com/image.jpg",
+			},
+		)
+
+		self.assertEqual(response.status_code, 302)
+		portfolio_item.refresh_from_db()
+		self.assertEqual(portfolio_item.title, "Updated Title")
+		self.assertEqual(portfolio_item.description, "Updated description")
+
+	def test_deserialized_portfolio_data_view_renders_items(self):
+		PortfolioItem.objects.create(
+			title="Deserialized Demo",
+			description="This item is deserialized from JSON",
+			category="featured",
+			link="https://example.com/deserialized",
+		)
+
+		response = self.client.get(reverse("main:show_portfolio_deserialized"))
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Deserialized Demo")
+		self.assertContains(response, "This item is deserialized from JSON")
+
 	def test_project_style_routes_are_available(self):
 		response = self.client.get(reverse("main:show_projects"))
 		self.assertEqual(response.status_code, 200)

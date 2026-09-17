@@ -12,7 +12,11 @@ from main.views import (
     show_experience,
     show_main,
     show_portfolio,
+    show_portfolio_deserialized,
     show_projects,
+    show_projects_deserialized,
+    update_portfolio_item,
+    update_project,
 )
 
 
@@ -25,8 +29,12 @@ urlpatterns = [
     path("projects/", show_projects, name="show_projects"),
     path("portfolio/add/", create_portfolio_item, name="create_portfolio_item"),
     path("projects/add/", create_project, name="create_project"),
+    path("portfolio/<uuid:portfolio_id>/update/", update_portfolio_item, name="update_portfolio_item"),
+    path("projects/<uuid:project_id>/update/", update_project, name="update_project"),
     path("portfolio/<uuid:portfolio_id>/delete/", delete_portfolio_item, name="delete_portfolio_item"),
-    path("projects/<uuid:portfolio_id>/delete/", delete_project, name="delete_project"),
+    path("projects/<uuid:project_id>/delete/", delete_project, name="delete_project"),
+    path("portfolio/deserialized/", show_portfolio_deserialized, name="show_portfolio_deserialized"),
+    path("projects/deserialized/", show_projects_deserialized, name="show_projects_deserialized"),
     path("api/portfolio/", get_portfolio_json, name="get_portfolio_json"),
     path("api/portfolio/xml/", get_portfolio_xml, name="get_portfolio_xml"),
     path("api/projects/", get_projects_json, name="get_projects_json"),

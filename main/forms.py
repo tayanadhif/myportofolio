@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import ModelForm, TextInput, Textarea, URLInput
 
-from main.models import PortfolioItem
+from main.models import PortfolioItem, ProjectSubmission
 
 
 class PortfolioItemForm(ModelForm):
@@ -49,6 +49,44 @@ class PortfolioItemForm(ModelForm):
                     "placeholder": "https://drive.google.com/thumbnail?id=...&sz=w1000",
                 }
             ),
+        }
+
+
+class ProjectSubmissionForm(ModelForm):
+    class Meta:
+        model = ProjectSubmission
+        fields = [
+            "title",
+            "category",
+            "estimated_budget",
+            "is_featured",
+        ]
+        labels = {
+            "title": "Judul Proyek",
+            "category": "Kategori",
+            "estimated_budget": "Estimasi Biaya",
+            "is_featured": "Prioritaskan proyek ini",
+        }
+        widgets = {
+            "title": TextInput(
+                attrs={
+                    "placeholder": "Website Portofolio",
+                    "maxlength": 255,
+                }
+            ),
+            "category": TextInput(
+                attrs={
+                    "placeholder": "Featured / Web / Mobile",
+                    "maxlength": 50,
+                }
+            ),
+            "estimated_budget": forms.NumberInput(
+                attrs={
+                    "placeholder": "5000000",
+                    "step": "1000",
+                }
+            ),
+            "is_featured": forms.CheckboxInput(),
         }
 
 

@@ -1,88 +1,55 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    {% load static %}
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portfolio - {{ name }}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-</head>
-<body>
-    <header class="site-header">
-        <div class="container header-inner">
-            <a href="{% url 'main:show_main' %}" class="brand">{{ name }}</a>
-            <nav aria-label="Main navigation">
-                <a href="{% url 'main:show_main' %}">Profile</a>
-                <a href="{% url 'main:show_experience' %}">Experience</a>
-                <a href="{% url 'main:show_portfolio' %}">Portfolio</a>
-            </nav>
-            <button class="theme-toggle" type="button" aria-label="Toggle dark mode">
-                <span class="theme-toggle__icon">&#127769;</span>
-            </button>
+{% extends "base.html" %}
+
+{% block title %}Portfolio - {{ name }}{% endblock %}
+
+{% block content %}
+<section class="experience-section" id="portfolio">
+    <div class="container">
+        <p class="section-kicker">Pilihan portofolio</p>
+
+        <div class="project-header">
+            <h1>Portfolio</h1>
+            <a href="{% url 'main:create_portfolio_item' %}" class="button project-add-button">
+                <span aria-hidden="true">+</span>
+                Tambah Portfolio
+            </a>
         </div>
-    </header>
 
-    <main>
-        <section class="experience-section" id="portfolio">
-            <div class="container">
-                <p class="section-kicker">Pilihan portofolio</p>
+        <form method="get" action="{% url 'main:show_portfolio' %}" class="project-search">
+            <input type="search"
+                   name="title"
+                   value="{{ title_query }}"
+                   placeholder="Cari berdasarkan judul portfolio"
+                   class="project-search__input"
+                   aria-label="Cari berdasarkan judul portfolio">
+            <button type="submit" class="button">Cari</button>
+        </form>
 
-                <div class="project-header">
-                    <h1>Portfolio</h1>
-                    <a href="{% url 'main:create_portfolio_item' %}" class="button project-add-button">
-                        <span aria-hidden="true">+</span>
-                        Tambah Portfolio
-                    </a>
-                </div>
-
-                <form method="get" action="{% url 'main:show_portfolio' %}" class="project-search">
-                    <input type="search"
-                           name="title"
-                           value="{{ title_query }}"
-                           placeholder="Cari berdasarkan judul portfolio"
-                           class="project-search__input"
-                           aria-label="Cari berdasarkan judul portfolio">
-                    <button type="submit" class="button">Cari</button>
-                </form>
-
-                {% if portfolio_items %}
-                    <div class="experience-grid project-grid">
-                        {% for item in portfolio_items %}
-                        <article class="experience-card">
-                            <span class="experience-category">{{ item.category }}</span>
-                            <h2>{{ item.title }}</h2>
-                            <p class="experience-description">{{ item.description }}</p>
-                            <div class="project-card-actions">
-                                <div class="project-actions">
-                                    {% if item.link %}
-                                    <a href="{{ item.link }}" class="button" target="_blank" rel="noreferrer">Lihat detail</a>
-                                    {% endif %}
-                                    {% include "components/portfolio_delete_modal.html" with item=item %}
-                                </div>
-                            </div>
-                        </article>
-                        {% endfor %}
+        {% if portfolio_items %}
+            <div class="experience-grid project-grid">
+                {% for item in portfolio_items %}
+                <article class="experience-card">
+                    <span class="experience-category">{{ item.category }}</span>
+                    <h2>{{ item.title }}</h2>
+                    <p class="experience-description">{{ item.description }}</p>
+                    <div class="project-card-actions">
+                        <div class="project-actions">
+                            {% if item.link %}
+                            <a href="{{ item.link }}" class="button" target="_blank" rel="noreferrer">Lihat detail</a>
+                            {% endif %}
+                            {% include "components/portfolio_delete_modal.html" with item=item %}
+                        </div>
                     </div>
-                {% else %}
-                    {% if title_query %}
-                    <p class="empty-state">Tidak ada portfolio dengan judul tersebut.</p>
-                    {% else %}
-                    <p class="empty-state">Belum ada item portofolio yang ditambahkan.</p>
-                    {% endif %}
-                {% endif %}
+                </article>
+                {% endfor %}
             </div>
-        </section>
-    </main>
-
-    <footer class="site-footer">
-        <div class="container">
-            <p>&copy; 2026 {{ name }}. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
-        </div>
-    </footer>
-
-    <script src="{% static 'js/theme.js' %}"></script>
-</body>
-</html>
+        {% else %}
+            {% if title_query %}
+            <p class="empty-state">Tidak ada portfolio dengan judul tersebut.</p>
+            {% else %}
+            <p class="empty-state">Belum ada item portofolio yang ditambahkan.</p>
+            {% endif %}
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -53,3 +53,19 @@ class PortfolioItem(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class ProjectSubmission(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+    )
+    title = models.CharField(max_length=255)
+    category = models.CharField(max_length=50)
+    estimated_budget = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    is_featured = models.BooleanField(default=False)
+    submission_date = models.DateField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title

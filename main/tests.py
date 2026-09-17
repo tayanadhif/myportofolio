@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from main.forms import ProjectSubmissionForm
 from main.models import Experience, PortfolioItem
 
 
@@ -131,3 +132,10 @@ class MainTest(TestCase):
 		create_response = self.client.get(reverse("main:create_project"))
 		self.assertEqual(create_response.status_code, 200)
 		self.assertContains(create_response, "Tambah Project")
+
+	def test_project_submission_form_uses_editable_fields_only(self):
+		self.assertIn("title", ProjectSubmissionForm.base_fields)
+		self.assertIn("category", ProjectSubmissionForm.base_fields)
+		self.assertIn("estimated_budget", ProjectSubmissionForm.base_fields)
+		self.assertNotIn("id", ProjectSubmissionForm.base_fields)
+		self.assertNotIn("created_at", ProjectSubmissionForm.base_fields)

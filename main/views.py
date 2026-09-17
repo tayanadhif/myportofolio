@@ -160,9 +160,29 @@ def show_projects(request):
     if title_query:
         project_list = project_list.filter(title__icontains=title_query)
 
+    project_list = list(project_list)
+
+    if not project_list:
+        project_list = [
+            PortfolioItem(
+                title="Bagaimana Cara Meningkatkan YouTube",
+                description="Host: Bang Toon & DAVGAMER LIVE\nIklan Promosi: R-Bot\nNarasumber: YtDaN332",
+                category="podcast",
+                tech_stack="Podcast",
+                project_url="#",
+            ),
+            PortfolioItem(
+                title="Game Development",
+                description="Project eksperimen pengembangan game dan video serta content creation.",
+                category="game",
+                tech_stack="Unity, C#",
+                project_url="#",
+            ),
+        ]
+
     context = {
         "name": "Nadhif Aydin Adinandra",
-        "project_list": list(project_list),
+        "project_list": project_list,
         "title_query": title_query,
     }
 

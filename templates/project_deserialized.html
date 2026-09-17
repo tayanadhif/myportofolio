@@ -19,7 +19,7 @@
                 {% endif %}
                 <h2>{{ project.title }}</h2>
                 <span class="experience-category">{{ project.tech_stack }}</span>
-                <p class="experience-description">{{ project.description }}</p>
+                <p class="experience-description">{{ project.description|linebreaksbr }}</p>
                 {% if project.project_url %}
                 <p><a href="{{ project.project_url }}" target="_blank" rel="noreferrer">{{ project.project_url }}</a></p>
                 {% endif %}

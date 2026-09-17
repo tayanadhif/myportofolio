@@ -8,7 +8,9 @@
 <main>
     <section class="project-form-section">
         <div class="container project-form-container">
-            <h1 class="project-form-title">Tambah Portfolio</h1>
+            <h1 class="project-form-title">
+                {% if update_object %}Edit Project{% else %}Tambah Project{% endif %}
+            </h1>
             {% if update_object %}
             <form method="post" action="{% url 'main:update_project' update_object.pk %}" class="project-form">
             {% else %}

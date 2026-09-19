@@ -18,17 +18,26 @@
                 </a>
             </div>
 
-            <form method="get" action="{% url 'main:show_projects' %}" class="project-search">
+            <div class="project-toolbar">
+                <div class="project-summary">
+                    <span class="filter-chip">Total Project</span>
+                    <strong id="project-count">{{ project_list|length }}</strong>
+                </div>
+                <button type="button" id="clear-project-search" class="button button-secondary hidden">Reset</button>
+            </div>
+
+            <form method="get" action="{% url 'main:show_projects' %}" class="project-search" id="project-search-form">
                 <input type="search"
                        name="title"
                        value="{{ title_query }}"
                        placeholder="Cari berdasarkan nama proyek"
                        class="project-search__input"
-                       aria-label="Cari berdasarkan nama proyek">
+                       aria-label="Cari berdasarkan nama proyek"
+                       id="project-search-input">
                 <button type="submit" class="button">Cari</button>
             </form>
 
-            <div class="experience-grid project-grid">
+            <div class="experience-grid project-grid" id="project-grid">
                 {% for project in project_list %}
                 <article class="experience-card">
                     {% if project.project_image_url %}
@@ -51,9 +60,9 @@
                 </article>
                 {% empty %}
                 {% if title_query %}
-                <p class="empty-state">Tidak ada proyek dengan nama tersebut.</p>
+                <p class="empty-state" data-empty-state="true">Tidak ada proyek dengan nama tersebut.</p>
                 {% else %}
-                <p class="empty-state">Belum ada proyek yang ditambahkan.</p>
+                <p class="empty-state" data-empty-state="true">Belum ada proyek yang ditambahkan.</p>
                 {% endif %}
                 {% endfor %}
             </div>

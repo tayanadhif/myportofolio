@@ -31,3 +31,5 @@ Kelas : PBP E
 ### AI Disclosure
 
 Saya menggunakan ChatGPT sebagai bantuan dalam mengembangkan website ini. AI membantu memberikan saran mengenai struktur HTML, styling CSS, responsive layout, penambahan section seperti Projects, Education, dan Contact, serta membantu menjelaskan beberapa konsep yang saya gunakan. Saya tetap menyesuaikan isi, data pribadi, desain, dan struktur website secara manual agar sesuai dengan portfolio yang saya buat. Saya juga melakukan pengecekan dan perubahan terhadap kode yang diberikan agar dapat berjalan sesuai kebutuhan proyek.
+
+**ChatGPT conversation:** [Lihat percakapan ChatGPT](https://chatgpt.com/share/6aaea516-5c38-83ec-81cb-97562004286b)

@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -176,3 +177,22 @@ class MainTest(TestCase):
 		self.assertIn("estimated_budget", ProjectSubmissionForm.base_fields)
 		self.assertNotIn("id", ProjectSubmissionForm.base_fields)
 		self.assertNotIn("created_at", ProjectSubmissionForm.base_fields)
+
+	def test_login_sets_last_login_cookie_and_logout_clears_it(self):
+		User = get_user_model()
+		user = User.objects.create_user(username="tester", password="strongpass123")
+
+		login_response = self.client.post(
+			reverse("main:login"),
+			{"username": "tester", "password": "strongpass123"},
+			follow=True,
+		)
+		self.assertEqual(login_response.status_code, 200)
+		self.assertIn("last_login", login_response.client.cookies)
+		self.assertNotEqual(login_response.client.cookies["last_login"].value, "")
+
+		logout_response = self.client.get(reverse("main:logout"), follow=True)
+		self.assertEqual(logout_response.status_code, 200)
+		self.assertIn("last_login", logout_response.client.cookies)
+		self.assertEqual(logout_response.client.cookies["last_login"].value, "")
+		self.assertContains(logout_response, "Belum ada sesi login / Cookie tidak ditemukan")

@@ -1,13 +1,22 @@
 from django.contrib import messages
+from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.core import serializers
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 from main.forms import PortfolioItemForm
 from main.models import Experience, PortfolioItem
 
 
 def show_main(request):
+    last_login = request.COOKIES.get("last_login")
+    if not last_login:
+        last_login = "Belum ada sesi login / Cookie tidak ditemukan"
+
     context = {
         "name": "Nadhif Aydin Adinandra",
         "npm": "2506537745",
@@ -15,6 +24,7 @@ def show_main(request):
         "bio": (
             "Computer Science student at Universitas Indonesia interested in programming, mathematics, and game development. Outside of academics, I also create gaming content on YouTube, sharing gameplay, longplays, and other gaming projects. Feel free to check out my channel and see what I do beyond Fasilkom. I also enjoy exploring new technologies and staying up-to-date with the latest trends in the tech world. My passion for learning drives me to continuously improve my skills and contribute to exciting projects."
         ),
+        "last_login": last_login,
     }
 
     return render(request, "index.html", context)
@@ -90,7 +100,8 @@ def get_portfolio_json(request):
     if title_query:
         portfolio_items = portfolio_items.filter(title__icontains=title_query)
 
-    portfolio_items_json = serializers.serialize("json", portfolio_items)
+    portfolio_items_json = serializers.serialize("json", portfolio_items, use_natural_foreign_keys=True)
+
     return HttpResponse(portfolio_items_json, content_type="application/json")
 
 
@@ -197,7 +208,11 @@ def get_projects_xml(request):
     return get_portfolio_xml(request)
 
 
+@login_required
 def create_project(request):
+    if not request.user.is_superuser:
+        raise PermissionDenied
+
     form = PortfolioItemForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
@@ -215,7 +230,11 @@ def create_project(request):
     return render(request, "projects_form.html", context)
 
 
+@login_required
 def update_project(request, project_id):
+    if not request.user.is_superuser:
+        raise PermissionDenied
+    
     project_item = get_object_or_404(PortfolioItem, pk=project_id)
     form = PortfolioItemForm(request.POST or None, instance=project_item)
 
@@ -279,11 +298,70 @@ def show_projects_deserialized(request):
     return render(request, "project_deserialized.html", context)
 
 
+@login_required
 def delete_project(request, project_id):
+    if not request.user.is_superuser:
+        raise PermissionDenied
+    
     portfolio_item = get_object_or_404(PortfolioItem, pk=project_id)
 
     if request.method == "POST":
         portfolio_item.delete()
         messages.success(request, "Project berhasil dihapus!")
+
+    return redirect("main:show_projects")
+
+
+def register(request):
+    form = UserCreationForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Akun berhasil dibuat. Silakan login.")
+        return redirect("main:login")
+
+    context = {
+        "name": "Nadhif Aydin Adinandra",
+        "form": form,
+    }
+    return render(request, "register.html", context)
+
+
+def login_user(request):
+    form = AuthenticationForm(request, data=request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        login(request, form.get_user())
+        response = redirect("main:show_main")
+        response.set_cookie(
+            "last_login",
+            timezone.localtime().strftime("%Y-%m-%d %H:%M:%S"),
+            max_age=60 * 60 * 24 * 7,
+            httponly=False,
+        )
+        return response
+
+    context = {
+        "name": "Nadhif Aydin Adinandra",
+        "form": form,
+    }
+    return render(request, "login.html", context)
+
+
+def logout_user(request):
+    logout(request)
+    response = redirect("main:show_main")
+    response.delete_cookie("last_login")
+    return response
+
+
+@login_required
+def toggle_star(request, project_id):
+    project = get_object_or_404(PortfolioItem, pk=project_id)
+
+    if request.user in project.starred_by.all():
+        project.starred_by.remove(request.user)
+    else:
+        project.starred_by.add(request.user)
 
     return redirect("main:show_projects")

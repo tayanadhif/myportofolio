@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block meta %}
+<title>Star Project - {{ name }}</title>
+{% endblock meta %}
+
+{% block content %}
+<main>
+    <section class="experience-section">
+        <div class="container">
+            <h1>Star Project</h1>
+
+            <p>
+                Project berhasil diperbarui.
+            </p>
+
+            <a href="{% url 'main:show_projects' %}" class="button">
+                Kembali ke Projects
+            </a>
+        </div>
+    </section>
+</main>
+{% endblock content %}

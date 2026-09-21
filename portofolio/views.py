@@ -2,8 +2,9 @@ from smtplib import SMTPException
 import logging
 
 from django.conf import settings
+from django.contrib.auth import logout
 from django.core.mail import EmailMessage
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.utils import timezone
 
 
@@ -69,3 +70,10 @@ def landing_page(request):
             "attachment_error": attachment_error,
         },
     )
+    
+
+def logout_user(request):
+    logout(request)
+    response = redirect("main:show_main")
+    response.delete_cookie("last_login")
+    return response

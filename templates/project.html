@@ -11,11 +11,13 @@
             <p class="section-kicker">Karya yang saya bangun</p>
 
             <div class="project-header">
-                <h1>Projects</h1>
-                <a href="{% url 'main:create_project' %}" class="button project-add-button">
-                    <span aria-hidden="true">+</span>
-                    Tambah Proyek
-                </a>
+                {% if user.is_superuser %}
+                    <h1>Projects</h1>
+                    <a href="{% url 'main:create_project' %}" class="button project-add-button">
+                        <span aria-hidden="true">+</span>
+                        Tambah Proyek
+                    </a>
+                {% endif %}
             </div>
 
             <div class="project-toolbar">
@@ -50,20 +52,48 @@
 
                     <div class="project-card-actions">
                         <div class="project-actions">
+
                             {% if project.project_url %}
-                            <a href="{{ project.project_url }}" class="button">Lihat Project</a>
+                            <a href="{{ project.project_url }}" class="button">
+                                Lihat Project
+                            </a>
                             {% endif %}
-                            <a href="{% url 'main:update_project' project.id %}" class="button button-secondary">Edit</a>
+
+                            {% if user.is_authenticated %}
+                            <form method="post" action="{% url 'main:toggle_star' project.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="button button-secondary">
+                                    {% if user in project.starred_by.all %}
+                                        ★ Unstar
+                                    {% else %}
+                                        ☆ Star
+                                    {% endif %}
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            {% if user.is_superuser %}
+                            <a href="{% url 'main:update_project' project.id %}" class="button button-secondary">
+                                Edit
+                            </a>
+
                             {% include "components/project_delete_modal.html" with project=project %}
+                            {% endif %}
+
                         </div>
                     </div>
                 </article>
+
                 {% empty %}
-                {% if title_query %}
-                <p class="empty-state" data-empty-state="true">Tidak ada proyek dengan nama tersebut.</p>
-                {% else %}
-                <p class="empty-state" data-empty-state="true">Belum ada proyek yang ditambahkan.</p>
-                {% endif %}
+                    {% if title_query %}
+                    <p class="empty-state" data-empty-state="true">
+                        Tidak ada proyek dengan nama tersebut.
+                    </p>
+                    {% else %}
+                    <p class="empty-state" data-empty-state="true">
+                        Belum ada proyek yang ditambahkan.
+                    </p>
+                    {% endif %}
                 {% endfor %}
             </div>
         </div>

@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class Experience(models.Model):
@@ -49,8 +50,13 @@ class PortfolioItem(models.Model):
     tech_stack = models.CharField(max_length=255, blank=True, default='')
     project_url = models.URLField(blank=True, null=True)
     project_image_url = models.URLField(blank=True, null=True)
+    starred_by = models.ManyToManyField(
+        User,
+        related_name="starred_projects",
+        blank=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
-
+    
     def __str__(self):
         return self.title
 

@@ -59,6 +59,10 @@
                             </a>
                             {% endif %}
 
+                            <span class="star-count">
+                                ★ {{ project.starred_by.count }}
+                            </span>
+
                             {% if user.is_authenticated %}
                             <form method="post" action="{% url 'main:toggle_star' project.id %}">
                                 {% csrf_token %}

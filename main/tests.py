@@ -189,6 +189,34 @@ class MainTest(TestCase):
 		self.assertEqual(project.starred_by.count(), 0)
 		self.assertNotIn(user, project.starred_by.all())
 
+	def test_project_filter_and_reorder_endpoints_work(self):
+		User = get_user_model()
+		user = User.objects.create_user(username="reorder-user", password="strongpass123")
+		content_type = ContentType.objects.get(app_label="main", model="portfolioitem")
+		editor_group = Group.objects.create(name="Editor")
+		for codename in ["add_portfolioitem", "change_portfolioitem", "delete_portfolioitem"]:
+			editor_group.permissions.add(Permission.objects.get(content_type=content_type, codename=codename))
+		user.groups.add(editor_group)
+		self.client.force_login(user)
+
+		project_one = PortfolioItem.objects.create(title="Alpha Project", description="Alpha", category="game", display_order=1)
+		project_two = PortfolioItem.objects.create(title="Beta Project", description="Beta", category="featured", display_order=0)
+
+		response = self.client.get(reverse("main:show_projects"), {"category": "game"})
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Alpha Project")
+		self.assertNotContains(response, "Beta Project")
+
+		reorder_response = self.client.post(
+			reverse("main:update_project_order"),
+			{ "project_ids[]": [str(project_two.pk), str(project_one.pk)] },
+		)
+		self.assertEqual(reorder_response.status_code, 200)
+		project_two.refresh_from_db()
+		project_one.refresh_from_db()
+		self.assertEqual(project_two.display_order, 0)
+		self.assertEqual(project_one.display_order, 1)
+
 	def test_deserialized_portfolio_data_view_renders_items(self):
 		PortfolioItem.objects.create(
 			title="Deserialized Demo",

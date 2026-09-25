@@ -50,6 +50,7 @@ class PortfolioItem(models.Model):
     tech_stack = models.CharField(max_length=255, blank=True, default='')
     project_url = models.URLField(blank=True, null=True)
     project_image_url = models.URLField(blank=True, null=True)
+    display_order = models.PositiveIntegerField(default=0, db_index=True)
     starred_by = models.ManyToManyField(
         User,
         related_name="starred_projects",

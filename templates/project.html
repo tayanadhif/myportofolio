@@ -38,12 +38,34 @@
                        class="project-search__input"
                        aria-label="Cari berdasarkan nama proyek"
                        id="project-search-input">
+
+                <select name="category" class="project-filter" aria-label="Filter berdasarkan kategori">
+                    <option value="">Semua kategori</option>
+                    {% for category in project_categories %}
+                    <option value="{{ category }}" {% if category == selected_category %}selected{% endif %}>{{ category|title }}</option>
+                    {% endfor %}
+                </select>
+
+                <select name="sort" class="project-filter" aria-label="Urutkan proyek">
+                    <option value="position" {% if sort_mode == 'position' %}selected{% endif %}>Urutan default</option>
+                    <option value="latest" {% if sort_mode == 'latest' %}selected{% endif %}>Terbaru</option>
+                    <option value="oldest" {% if sort_mode == 'oldest' %}selected{% endif %}>Terlama</option>
+                    <option value="title" {% if sort_mode == 'title' %}selected{% endif %}>Judul A-Z</option>
+                    <option value="starred" {% if sort_mode == 'starred' %}selected{% endif %}>Banyak star</option>
+                </select>
+
                 <button type="submit" class="button">Cari</button>
             </form>
 
             <div class="experience-grid project-grid" id="project-grid">
                 {% for project in project_list %}
-                <article class="experience-card">
+                <article class="experience-card" data-project-id="{{ project.id }}" data-category="{{ project.category }}" draggable="{% if user.is_authenticated and perms.main.change_portfolioitem %}true{% else %}false{% endif %}">
+                    {% if user.is_authenticated and perms.main.change_portfolioitem %}
+                    <div class="project-card-header">
+                        <span class="drag-handle" aria-label="Geser proyek" title="Geser proyek">⋮⋮</span>
+                    </div>
+                    {% endif %}
+
                     {% if project.project_image_url %}
                     <img src="{{ project.project_image_url }}" alt="Gambar {{ project.title }}" class="project-image">
                     {% endif %}
@@ -107,4 +129,7 @@
         </div>
     </section>
 </main>
+<script>
+    window.projectOrderCsrf = "{{ csrf_token }}";
+</script>
 {% endblock content %}

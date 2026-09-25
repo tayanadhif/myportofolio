@@ -851,9 +851,11 @@ body.dark-mode .contact-form textarea::placeholder {
     gap: 0.75rem;
     margin-bottom: 1.5rem;
     align-items: center;
+    flex-wrap: wrap;
 }
 
-.project-search__input {
+.project-search__input,
+.project-filter {
     width: 100%;
     min-width: 0;
     min-height: 48px;
@@ -866,14 +868,47 @@ body.dark-mode .contact-form textarea::placeholder {
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.project-search__input:focus {
-    transform: translateY(-1px);
-    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+.project-filter {
+    max-width: 220px;
+    min-width: 160px;
 }
 
-.project-search__input:focus {
+.project-search__input:focus,
+.project-filter:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
     outline: 2px solid var(--accent);
     border-color: var(--accent);
+}
+
+.project-card-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.5rem;
+}
+
+.drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.08);
+    color: var(--text-muted);
+    cursor: grab;
+    user-select: none;
+}
+
+.dragging {
+    opacity: 0.7;
+    border-style: dashed;
+}
+
+.drag-over {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.12);
 }
 
 .project-delete-modal {

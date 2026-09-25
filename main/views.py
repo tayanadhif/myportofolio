@@ -6,9 +6,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponse
+from django.db.models import Count
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from main.forms import PortfolioItemForm
 from main.models import Experience, PortfolioItem
@@ -204,10 +206,25 @@ def delete_portfolio_item(request, portfolio_id):
 
 def show_projects(request):
     title_query = request.GET.get("title", "").strip()
-    project_list = PortfolioItem.objects.order_by("created_at")
+    selected_category = request.GET.get("category", "").strip()
+    sort_mode = request.GET.get("sort", "position").strip()
+
+    project_list = PortfolioItem.objects.order_by("display_order", "-created_at")
 
     if title_query:
         project_list = project_list.filter(title__icontains=title_query)
+
+    if selected_category:
+        project_list = project_list.filter(category=selected_category)
+
+    if sort_mode == "latest":
+        project_list = project_list.order_by("-created_at", "display_order")
+    elif sort_mode == "oldest":
+        project_list = project_list.order_by("created_at", "display_order")
+    elif sort_mode == "title":
+        project_list = project_list.order_by("title", "display_order")
+    elif sort_mode == "starred":
+        project_list = project_list.annotate(star_count=Count("starred_by")).order_by("-star_count", "display_order")
 
     project_list = list(project_list)
 
@@ -219,6 +236,7 @@ def show_projects(request):
                 category="podcast",
                 tech_stack="Podcast",
                 project_url="#",
+                display_order=0,
             ),
             PortfolioItem(
                 title="Game Development",
@@ -226,13 +244,24 @@ def show_projects(request):
                 category="game",
                 tech_stack="Unity, C#",
                 project_url="#",
+                display_order=1,
             ),
         ]
+
+    project_categories = list(
+        PortfolioItem.objects.exclude(category="")
+        .order_by("category")
+        .values_list("category", flat=True)
+        .distinct()
+    )
 
     context = {
         "name": "Nadhif Aydin Adinandra",
         "project_list": project_list,
         "title_query": title_query,
+        "selected_category": selected_category,
+        "sort_mode": sort_mode,
+        "project_categories": project_categories,
     }
 
     return render(request, "project.html", context)
@@ -397,3 +426,18 @@ def toggle_star(request, project_id):
         project.starred_by.add(request.user)
 
     return redirect("main:show_projects")
+
+
+@login_required
+@editor_required
+@require_POST
+def update_project_order(request):
+    project_ids = request.POST.getlist("project_ids[]") or request.POST.getlist("project_ids")
+
+    if not project_ids:
+        return JsonResponse({"status": "error", "message": "No project ids provided."}, status=400)
+
+    for order_index, project_id in enumerate(project_ids):
+        PortfolioItem.objects.filter(pk=project_id).update(display_order=order_index)
+
+    return JsonResponse({"status": "success", "updated": len(project_ids)})

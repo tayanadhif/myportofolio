@@ -9,10 +9,12 @@
 
         <div class="project-header">
             <h1>Portfolio</h1>
+            {% if user.is_authenticated and perms.main.add_portfolioitem %}
             <a href="{% url 'main:create_portfolio_item' %}" class="button project-add-button">
                 <span aria-hidden="true">+</span>
                 Tambah Portfolio
             </a>
+            {% endif %}
         </div>
 
         <form method="get" action="{% url 'main:show_portfolio' %}" class="project-search">
@@ -37,7 +39,9 @@
                             {% if item.link %}
                             <a href="{{ item.link }}" class="button" target="_blank" rel="noreferrer">Lihat detail</a>
                             {% endif %}
+                            {% if user.is_authenticated and perms.main.delete_portfolioitem %}
                             {% include "components/portfolio_delete_modal.html" with item=item %}
+                            {% endif %}
                         </div>
                     </div>
                 </article>

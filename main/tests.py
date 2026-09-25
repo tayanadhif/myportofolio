@@ -1,4 +1,6 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -113,6 +115,15 @@ class MainTest(TestCase):
 		self.assertContains(response, "<object")
 
 	def test_create_portfolio_item_via_form(self):
+		User = get_user_model()
+		user = User.objects.create_user(username="editor-create", password="strongpass123")
+		content_type = ContentType.objects.get(app_label="main", model="portfolioitem")
+		editor_group = Group.objects.create(name="Editor")
+		for codename in ["add_portfolioitem", "change_portfolioitem", "delete_portfolioitem"]:
+			editor_group.permissions.add(Permission.objects.get(content_type=content_type, codename=codename))
+		user.groups.add(editor_group)
+		self.client.force_login(user)
+
 		response = self.client.post(
 			reverse("main:create_portfolio_item"),
 			{
@@ -126,6 +137,15 @@ class MainTest(TestCase):
 		self.assertTrue(PortfolioItem.objects.filter(title="New Demo Item").exists())
 
 	def test_update_portfolio_item_via_form(self):
+		User = get_user_model()
+		user = User.objects.create_user(username="editor-update", password="strongpass123")
+		content_type = ContentType.objects.get(app_label="main", model="portfolioitem")
+		editor_group = Group.objects.create(name="Editor")
+		for codename in ["add_portfolioitem", "change_portfolioitem", "delete_portfolioitem"]:
+			editor_group.permissions.add(Permission.objects.get(content_type=content_type, codename=codename))
+		user.groups.add(editor_group)
+		self.client.force_login(user)
+
 		portfolio_item = PortfolioItem.objects.create(
 			title="Old Title",
 			description="Old description",
@@ -168,8 +188,8 @@ class MainTest(TestCase):
 		self.assertContains(response, "Portfolio")
 
 		create_response = self.client.get(reverse("main:create_project"))
-		self.assertEqual(create_response.status_code, 200)
-		self.assertContains(create_response, "Tambah Project")
+		self.assertEqual(create_response.status_code, 302)
+		self.assertIn("/login/", create_response.url)
 
 	def test_project_submission_form_uses_editable_fields_only(self):
 		self.assertIn("title", ProjectSubmissionForm.base_fields)
@@ -196,3 +216,44 @@ class MainTest(TestCase):
 		self.assertIn("last_login", logout_response.client.cookies)
 		self.assertEqual(logout_response.client.cookies["last_login"].value, "")
 		self.assertContains(logout_response, "Belum ada sesi login / Cookie tidak ditemukan")
+
+	def test_unauthenticated_user_is_redirected_to_login_for_protected_actions(self):
+		response = self.client.get(reverse("main:create_portfolio_item"))
+		self.assertEqual(response.status_code, 302)
+		self.assertIn("/login/", response.url)
+
+		project_response = self.client.get(reverse("main:create_project"))
+		self.assertEqual(project_response.status_code, 302)
+		self.assertIn("/login/", project_response.url)
+
+	def test_logged_in_user_without_permission_gets_403(self):
+		User = get_user_model()
+		user = User.objects.create_user(username="member", password="strongpass123")
+		self.client.force_login(user)
+
+		response = self.client.get(reverse("main:create_portfolio_item"))
+		self.assertEqual(response.status_code, 403)
+
+		project_response = self.client.get(reverse("main:create_project"))
+		self.assertEqual(project_response.status_code, 403)
+
+	def test_editor_group_permissions_show_management_controls(self):
+		User = get_user_model()
+		content_type = ContentType.objects.get(app_label="main", model="portfolioitem")
+		editor_group = Group.objects.create(name="Editor")
+		for codename in ["add_portfolioitem", "change_portfolioitem", "delete_portfolioitem"]:
+			editor_group.permissions.add(Permission.objects.get(content_type=content_type, codename=codename))
+
+		user = User.objects.create_user(username="editor", password="strongpass123")
+		user.groups.add(editor_group)
+		self.client.force_login(user)
+
+		portfolio_response = self.client.get(reverse("main:show_portfolio"))
+		self.assertEqual(portfolio_response.status_code, 200)
+		self.assertContains(portfolio_response, "Tambah Portfolio")
+		self.assertContains(portfolio_response, "Hapus")
+
+		project_response = self.client.get(reverse("main:show_projects"))
+		self.assertEqual(project_response.status_code, 200)
+		self.assertContains(project_response, "Tambah Proyek")
+		self.assertContains(project_response, "Hapus Proyek")

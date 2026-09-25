@@ -1,3 +1,5 @@
+from functools import wraps
+
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -10,6 +12,36 @@ from django.utils import timezone
 
 from main.forms import PortfolioItemForm
 from main.models import Experience, PortfolioItem
+
+
+EDITOR_REQUIRED_PERMISSIONS = (
+    "main.add_portfolioitem",
+    "main.change_portfolioitem",
+    "main.delete_portfolioitem",
+)
+
+
+def user_has_editor_access(user):
+    if not user.is_authenticated:
+        return False
+
+    if user.is_superuser:
+        return True
+
+    if user.groups.filter(name="Editor").exists():
+        return True
+
+    return user.has_perms(EDITOR_REQUIRED_PERMISSIONS)
+
+
+def editor_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not user_has_editor_access(request.user):
+            raise PermissionDenied
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped_view
 
 
 def show_main(request):
@@ -116,6 +148,8 @@ def get_portfolio_xml(request):
     return HttpResponse(portfolio_items_xml, content_type="application/xml")
 
 
+@login_required
+@editor_required
 def create_portfolio_item(request):
     form = PortfolioItemForm(request.POST or None)
 
@@ -134,6 +168,8 @@ def create_portfolio_item(request):
     return render(request, "portfolio_form.html", context)
 
 
+@login_required
+@editor_required
 def update_portfolio_item(request, portfolio_id):
     portfolio_item = get_object_or_404(PortfolioItem, pk=portfolio_id)
     form = PortfolioItemForm(request.POST or None, instance=portfolio_item)
@@ -154,6 +190,8 @@ def update_portfolio_item(request, portfolio_id):
     return render(request, "portfolio_form.html", context)
 
 
+@login_required
+@editor_required
 def delete_portfolio_item(request, portfolio_id):
     portfolio_item = get_object_or_404(PortfolioItem, pk=portfolio_id)
 
@@ -209,10 +247,8 @@ def get_projects_xml(request):
 
 
 @login_required
+@editor_required
 def create_project(request):
-    if not request.user.is_superuser:
-        raise PermissionDenied
-
     form = PortfolioItemForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
@@ -231,10 +267,8 @@ def create_project(request):
 
 
 @login_required
+@editor_required
 def update_project(request, project_id):
-    if not request.user.is_superuser:
-        raise PermissionDenied
-    
     project_item = get_object_or_404(PortfolioItem, pk=project_id)
     form = PortfolioItemForm(request.POST or None, instance=project_item)
 
@@ -299,10 +333,8 @@ def show_projects_deserialized(request):
 
 
 @login_required
+@editor_required
 def delete_project(request, project_id):
-    if not request.user.is_superuser:
-        raise PermissionDenied
-    
     portfolio_item = get_object_or_404(PortfolioItem, pk=project_id)
 
     if request.method == "POST":

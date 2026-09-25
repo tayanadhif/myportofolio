@@ -11,12 +11,14 @@
             <p class="section-kicker">Karya yang saya bangun</p>
 
             <div class="project-header">
-                {% if user.is_superuser %}
+                {% if user.is_authenticated and perms.main.add_portfolioitem %}
                     <h1>Projects</h1>
                     <a href="{% url 'main:create_project' %}" class="button project-add-button">
                         <span aria-hidden="true">+</span>
                         Tambah Proyek
                     </a>
+                {% else %}
+                    <h1>Projects</h1>
                 {% endif %}
             </div>
 
@@ -76,11 +78,13 @@
                             </form>
                             {% endif %}
 
-                            {% if user.is_superuser %}
+                            {% if user.is_authenticated and perms.main.change_portfolioitem %}
                             <a href="{% url 'main:update_project' project.id %}" class="button button-secondary">
                                 Edit
                             </a>
+                            {% endif %}
 
+                            {% if user.is_authenticated and perms.main.delete_portfolioitem %}
                             {% include "components/project_delete_modal.html" with project=project %}
                             {% endif %}
 

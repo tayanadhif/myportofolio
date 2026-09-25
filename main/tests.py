@@ -169,6 +169,26 @@ class MainTest(TestCase):
 		self.assertEqual(portfolio_item.title, "Updated Title")
 		self.assertEqual(portfolio_item.description, "Updated description")
 
+	def test_toggle_star_adds_and_removes_user_star(self):
+		User = get_user_model()
+		user = User.objects.create_user(username="star-user", password="strongpass123")
+		self.client.force_login(user)
+		project = PortfolioItem.objects.create(
+			title="Starred Project",
+			description="Project to test star toggle.",
+			category="featured",
+		)
+
+		response = self.client.post(reverse("main:toggle_star", args=[project.pk]))
+		self.assertEqual(response.status_code, 302)
+		self.assertEqual(project.starred_by.count(), 1)
+		self.assertIn(user, project.starred_by.all())
+
+		response = self.client.post(reverse("main:toggle_star", args=[project.pk]))
+		self.assertEqual(response.status_code, 302)
+		self.assertEqual(project.starred_by.count(), 0)
+		self.assertNotIn(user, project.starred_by.all())
+
 	def test_deserialized_portfolio_data_view_renders_items(self):
 		PortfolioItem.objects.create(
 			title="Deserialized Demo",

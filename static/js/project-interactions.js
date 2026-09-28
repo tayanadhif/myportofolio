@@ -174,7 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
 
             const formData = new FormData(projectCreateForm);
-            fetch(projectCreateForm.action, {
+            const endpoint = window.projectAjaxConfig?.createProjectEndpoint || projectCreateForm.action;
+            fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
@@ -188,7 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     Object.entries(payload.errors || {}).forEach(([field, errors]) => {
                         const fieldError = projectCreateForm.querySelector(`[data-error-for="${field}"]`);
                         if (fieldError) {
-                            fieldError.textContent = Array.isArray(errors) ? errors.map((error) => error.message || error).join(', ') : String(errors);
+                            const list = Array.isArray(errors) ? errors : [errors];
+                            fieldError.textContent = list.map((error) => error.message || error).join(', ');
                         }
                     });
                     return;

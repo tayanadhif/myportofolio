@@ -510,14 +510,10 @@ def update_project_order(request):
     return JsonResponse({"status": "success", "updated": len(project_ids)})
 
 
+@login_required
+@editor_required
 @require_POST
 def create_project_ajax(request):
-    if not request.user.is_superuser:
-        return JsonResponse(
-            {"message": "Hanya pemilik portofolio yang dapat menambahkan proyek."},
-            status=403,
-        )
-
     form = ProjectForm(request.POST)
     if form.is_valid():
         project = form.save()

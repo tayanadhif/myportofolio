@@ -1,0 +1,38 @@
+{% load static %}
+
+<div id="toast-component" class="toast-component toast-hidden" popover="manual">
+    <div class="toast-content">
+        <h3 id="toast-title" class="toast-title">This is a Sample Title</h3>
+        <p id="toast-message" class="toast-message">This is a Sample Message</p>
+    </div>
+</div>
+
+<script src="{% static 'js/toast.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const toastMessages = [
+            {% for message in messages %}
+            {
+                text: "{{ message|escapejs }}",
+                type: "{{ message.tags|default:'info' }}",
+            },
+            {% endfor %}
+        ];
+
+        toastMessages.forEach(({ text, type }) => {
+            const normalizedType = type.includes('error')
+                ? 'error'
+                : type.includes('success')
+                    ? 'success'
+                    : 'normal';
+
+            const title = normalizedType === 'success'
+                ? 'Berhasil'
+                : normalizedType === 'error'
+                    ? 'Perhatian'
+                    : 'Informasi';
+
+            showToast(title, text, normalizedType);
+        });
+    });
+</script>

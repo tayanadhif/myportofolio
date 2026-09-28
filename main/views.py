@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from main.forms import PortfolioItemForm
+from main.forms import PortfolioItemForm, ProjectForm
 from main.models import Experience, PortfolioItem
 
 
@@ -255,6 +255,9 @@ def show_projects(request):
         .distinct()
     )
 
+    user_can_edit = request.user.is_authenticated and user_has_editor_access(request.user)
+    user_can_delete = request.user.is_authenticated and user_has_editor_access(request.user)
+
     context = {
         "name": "Nadhif Aydin Adinandra",
         "project_list": project_list,
@@ -262,13 +265,56 @@ def show_projects(request):
         "selected_category": selected_category,
         "sort_mode": sort_mode,
         "project_categories": project_categories,
+        "project_form": PortfolioItemForm(),
+        "user_can_edit": user_can_edit,
+        "user_can_delete": user_can_delete,
     }
 
     return render(request, "project.html", context)
 
 
 def get_projects_json(request):
-    return get_portfolio_json(request)
+    title_query = request.GET.get("title", "").strip()
+    selected_category = request.GET.get("category", "").strip()
+    sort_mode = request.GET.get("sort", "position").strip()
+
+    projects = PortfolioItem.objects.prefetch_related("starred_by")
+
+    if title_query:
+        projects = projects.filter(title__icontains=title_query)
+
+    if selected_category:
+        projects = projects.filter(category=selected_category)
+
+    if sort_mode == "latest":
+        projects = projects.order_by("-created_at", "display_order")
+    elif sort_mode == "oldest":
+        projects = projects.order_by("created_at", "display_order")
+    elif sort_mode == "title":
+        projects = projects.order_by("title", "display_order")
+    elif sort_mode == "starred":
+        projects = projects.annotate(star_count=Count("starred_by")).order_by("-star_count", "display_order")
+    else:
+        projects = projects.order_by("display_order", "-created_at")
+
+    data = []
+    for project in projects:
+        starred_users = list(project.starred_by.all())
+        is_starred = request.user in starred_users if request.user.is_authenticated else False
+        data.append({
+            "id": str(project.id),
+            "title": project.title,
+            "description": project.description,
+            "category": project.category,
+            "tech_stack": project.tech_stack,
+            "project_url": project.project_url,
+            "project_image_url": project.project_image_url,
+            "star_count": len(starred_users),
+            "is_starred": is_starred,
+            "starred_by_names": ", ".join(user.username for user in starred_users),
+        })
+
+    return JsonResponse(data, safe=False)
 
 
 def get_projects_xml(request):
@@ -281,9 +327,30 @@ def create_project(request):
     form = PortfolioItemForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
-        form.save()
+        project = form.save()
         messages.success(request, "Project baru berhasil ditambahkan!")
+
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({
+                "status": "success",
+                "message": "Project baru berhasil ditambahkan!",
+                "project": {
+                    "id": str(project.id),
+                    "title": project.title,
+                    "description": project.description,
+                    "category": project.category,
+                    "tech_stack": project.tech_stack,
+                    "project_url": project.project_url,
+                    "project_image_url": project.project_image_url,
+                    "star_count": project.starred_by.count(),
+                },
+            }, status=201)
+
         return redirect("main:show_projects")
+
+    if request.method == "POST" and not form.is_valid():
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"status": "error", "errors": form.errors.get_json_data()}, status=400)
 
     context = {
         "name": "Nadhif Aydin Adinandra",
@@ -441,3 +508,22 @@ def update_project_order(request):
         PortfolioItem.objects.filter(pk=project_id).update(display_order=order_index)
 
     return JsonResponse({"status": "success", "updated": len(project_ids)})
+
+
+@require_POST
+def create_project_ajax(request):
+    if not request.user.is_superuser:
+        return JsonResponse(
+            {"message": "Hanya pemilik portofolio yang dapat menambahkan proyek."},
+            status=403,
+        )
+
+    form = ProjectForm(request.POST)
+    if form.is_valid():
+        project = form.save()
+        return JsonResponse(
+            {"message": "Proyek berhasil ditambahkan.", "pk": str(project.id)},
+            status=201,
+        )
+
+    return JsonResponse({"errors": form.errors.get_json_data()}, status=400)

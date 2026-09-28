@@ -4,6 +4,7 @@ from django.urls import include, path
 from main.views import (
     create_portfolio_item,
     create_project,
+    create_project_ajax,
     delete_portfolio_item,
     delete_project,
     get_portfolio_json,
@@ -50,4 +51,5 @@ urlpatterns = [
     path("logout/", logout_user, name="logout"),
     path("projects/<uuid:project_id>/star/", toggle_star, name="toggle_star"),
     path("projects/reorder/", update_project_order, name="update_project_order"),
+    path("projects/add-ajax/", create_project_ajax, name="create_project_ajax"),
 ]

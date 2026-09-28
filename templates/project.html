@@ -13,10 +13,12 @@
             <div class="project-header">
                 {% if user.is_authenticated and perms.main.add_portfolioitem %}
                     <h1>Projects</h1>
-                    <a href="{% url 'main:create_project' %}" class="button project-add-button">
+                    <button type="button"
+                            id="open-project-modal"
+                            class="button project-add-button">
                         <span aria-hidden="true">+</span>
                         Tambah Proyek
-                    </a>
+                    </button>
                 {% else %}
                     <h1>Projects</h1>
                 {% endif %}
@@ -129,7 +131,155 @@
         </div>
     </section>
 </main>
+
+{% if user.is_authenticated and perms.main.add_portfolioitem %}
+<div id="project-modal" class="project-modal hidden" role="dialog" aria-modal="true" aria-labelledby="project-modal-title">
+    <div class="project-modal__backdrop" data-close-project-modal="true"></div>
+    <div class="project-modal__content">
+        <button type="button" id="close-project-modal" class="project-modal__close" aria-label="Tutup form proyek">×</button>
+        <h2 id="project-modal-title">Tambah Proyek</h2>
+        <form id="project-create-form" method="post" action="{% url 'main:create_project' %}" novalidate>
+            {% csrf_token %}
+            {% for field in project_form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                <p class="form-error" data-error-for="{{ field.name }}"></p>
+            </div>
+            {% endfor %}
+            <div class="form-actions">
+                <button type="submit" class="button">Tambah Project</button>
+                <button type="button" class="button button-secondary" data-close-project-modal="true">Batal</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
 <script>
     window.projectOrderCsrf = "{{ csrf_token }}";
+    window.projectAjaxConfig = {
+        canEdit: {{ user_can_edit|yesno:"true,false" }},
+        canDelete: {{ user_can_delete|yesno:"true,false" }},
+        updateBaseUrl: "{% url 'main:update_project' '00000000-0000-0000-0000-000000000000' %}",
+        deleteBaseUrl: "{% url 'main:delete_project' '00000000-0000-0000-0000-000000000000' %}",
+        toggleStarBaseUrl: "{% url 'main:toggle_star' '00000000-0000-0000-0000-000000000000' %}",
+        csrfToken: "{{ csrf_token }}",
+    };
+</script>
+
+
+    async function fetchProjects(searchQuery = "") {
+        if (projectsAbortController) projectsAbortController.abort();
+        projectsAbortController = new AbortController();
+
+        try {
+            displayPageSection({ showLoading: true });
+            
+            const url = searchQuery ? `${BASE_PROJECTS_ENDPOINT}?title=${encodeURIComponent(searchQuery)}` : BASE_PROJECTS_ENDPOINT;
+            
+            const response = await fetch(url, {
+                headers: { 'Accept': 'application/json' },
+                signal: projectsAbortController.signal,
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch data');
+
+            const projectData = await response.json();
+
+            if (projectData.length === 0) {
+                displayPageSection({ showEmpty: true });
+            } else {
+                gridContainer.innerHTML = '';
+                projectData.forEach(item => {
+                    gridContainer.appendChild(buildProjectCardElement(item));
+                });
+                displayPageSection({ showGrid: true });
+            }
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            console.error('Error loading projects:', error);
+            displayPageSection({ showError: true });
+        }
+    }
+
+    // Event Handlers untuk Form Search
+    function searchProjects() {
+        fetchProjects(searchInput.value.trim());
+    }
+
+    searchInput.addEventListener("input", function() {
+        clearTimeout(searchDebounceTimer);
+
+        searchDebounceTimer = setTimeout(function() {
+            searchProjects();
+        }, SEARCH_DEBOUNCE_DELAY);
+    });
+
+    searchForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+        clearTimeout(searchDebounceTimer);
+        searchProjects();
+    });
+
+    // Start application
+    fetchProjects(searchInput.value.trim());
+
+    const CREATE_PROJECT_ENDPOINT = "{% url 'main:create_project_ajax' %}";
+    const projectForm = document.getElementById('project-form');
+
+    // Membaca nilai cookie, digunakan untuk mengambil token CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Mengirim data form ke server
+    async function addProject(event) {
+        event.preventDefault();
+
+        const submitButton = projectForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+
+        try {
+            const response = await fetch(CREATE_PROJECT_ENDPOINT, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                body: new FormData(projectForm),
+            });
+            const result = await response.json().catch(() => ({}));
+
+            if (response.ok) {
+                projectForm.reset();
+                closeProjectModal();
+                showToast('Berhasil', 'Proyek baru berhasil ditambahkan!', 'success');
+                fetchProjects(searchInput.value.trim());
+            } else {
+                const errorMessages = result.errors
+                    ? Object.values(result.errors).flat().map(error => error.message)
+                    : [result.message || `Terjadi kesalahan (status ${response.status}).`];
+                showToast('Gagal menambahkan proyek', errorMessages.join(' '), 'error');
+            }
+        } catch (error) {
+            console.error('Error adding project:', error);
+            showToast('Gagal menambahkan proyek', 'Tidak dapat terhubung ke server. Silakan coba lagi.', 'error');
+        } finally {
+            submitButton.disabled = false;
+        }
+    }
+
+    if (projectForm) {
+        projectForm.addEventListener('submit', addProject);
+    }
 </script>
 {% endblock content %}

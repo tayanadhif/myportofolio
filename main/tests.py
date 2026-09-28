@@ -246,6 +246,33 @@ class MainTest(TestCase):
 		self.assertNotIn("id", ProjectSubmissionForm.base_fields)
 		self.assertNotIn("created_at", ProjectSubmissionForm.base_fields)
 
+	def test_project_form_strips_malicious_html_from_title(self):
+		User = get_user_model()
+		user = User.objects.create_user(username="xss-editor", password="strongpass123")
+		content_type = ContentType.objects.get(app_label="main", model="portfolioitem")
+		editor_group = Group.objects.create(name="Editor")
+		for codename in ["add_portfolioitem", "change_portfolioitem", "delete_portfolioitem"]:
+			editor_group.permissions.add(Permission.objects.get(content_type=content_type, codename=codename))
+		user.groups.add(editor_group)
+		self.client.force_login(user)
+
+		response = self.client.post(
+			reverse("main:create_project"),
+			{
+				"title": "<script>alert('xss')</script>Project Aman",
+				"description": "Deskripsi aman tanpa script.",
+				"tech_stack": "Django, Python",
+				"project_url": "https://example.com/project",
+				"project_image_url": "https://example.com/image.jpg",
+			},
+		)
+
+		self.assertEqual(response.status_code, 302)
+		project = PortfolioItem.objects.filter(title__icontains="Project Aman").first()
+		self.assertIsNotNone(project)
+		self.assertNotIn("<script>", project.title)
+		self.assertNotIn("alert('xss')", project.title)
+
 	def test_login_sets_last_login_cookie_and_logout_clears_it(self):
 		User = get_user_model()
 		user = User.objects.create_user(username="tester", password="strongpass123")

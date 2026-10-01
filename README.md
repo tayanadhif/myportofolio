@@ -28,6 +28,15 @@ Kelas : PBP E
 
 3. Saat kita menggunakan fungsi view untuk mengembalikan data portofolio dalam bentuk JSON, alurnya dimulai dari request HTTP ke URL tertentu, misalnya `/api/portfolio/`. View akan mengambil data dari model `PortfolioItem` melalui ORM Django, seperti `PortfolioItem.objects.all()`, lalu menerapkan filter jika diperlukan. Setelah itu, data tersebut harus diproses melalui `serializers.serialize("json", queryset)`, yang bertujuan mengubah objek Django menjadi format JSON yang siap dikirim ke client. Proses serialization diperlukan karena model Django merupakan objek Python yang tidak bisa langsung dikirim ke browser sebagai respons HTTP. Serialization memastikan data diubah ke representasi standar yang dapat dibaca oleh client, seperti JSON atau XML, serta menjaga field-field yang relevan seperti `title`, `description`, dan `link` sesuai format yang diinginkan. Setelah respons dikembalikan oleh view, client dapat melakukan parsing dan menampilkan data di frontend atau aplikasi lain.
 
+### Tugas 5
+
+1. Debouncing adalah teknik untuk menunda eksekusi fungsi sampai pengguna berhenti mengetik selama waktu tertentu. Teknik ini penting pada pencarian AJAX karena tanpa debouncing setiap karakter dapat mengirim satu request baru ke server. Dengan debouncing, request hanya dikirim setelah jeda, sehingga jumlah request, beban server, dan kemungkinan response yang saling bertumpuk dapat dikurangi.
+
+2. `fetch()` mengembalikan sebuah Promise. Penggunaan `await` membuat fungsi asynchronous menunggu Promise tersebut selesai sebelum melanjutkan ke baris berikutnya, sehingga response dapat diproses secara berurutan, misalnya dengan `await response.json()`. Tanpa `await`, nilai yang diterima masih berupa Promise, bukan data response. Jika langsung diperlakukan sebagai object JSON, kode dapat menghasilkan data yang belum tersedia atau error.
+
+3. XSS (*Cross-Site Scripting*) adalah serangan ketika input berbahaya dari pengguna ditampilkan sebagai kode yang kemudian dijalankan oleh browser. Data yang ditampilkan melalui AJAX/JavaScript lebih rentan apabila nilai response dimasukkan menggunakan `innerHTML` tanpa escaping, karena JavaScript menyusun HTML secara langsung. Template Django secara default melakukan escaping pada nilai template, sedangkan JavaScript harus melakukannya secara eksplisit. Pada proyek ini, nilai dinamis di-escape menggunakan `escapeHtml` atau dimasukkan menggunakan `textContent`, dan input teks dibersihkan di server dengan `strip_tags` pada method `clean_<field>` di `ModelForm`.
+
+
 ### AI Disclosure
 
 Saya menggunakan ChatGPT sebagai bantuan dalam mengembangkan website ini. AI membantu memberikan saran mengenai struktur HTML, styling CSS, responsive layout, penambahan section seperti Projects, Education, dan Contact, serta membantu menjelaskan beberapa konsep yang saya gunakan. Saya tetap menyesuaikan isi, data pribadi, desain, dan struktur website secara manual agar sesuai dengan portfolio yang saya buat. Saya juga melakukan pengecekan dan perubahan terhadap kode yang diberikan agar dapat berjalan sesuai kebutuhan proyek.
@@ -35,9 +44,4 @@ Saya menggunakan ChatGPT sebagai bantuan dalam mengembangkan website ini. AI mem
 **ChatGPT history conversation:**
 - [Percakapan Tugas 1, 2, dan 3](https://chatgpt.com/share/6aaea516-5c38-83ec-81cb-97562004286b)
 - [Percakapan Tugas 4](https://chatgpt.com/share/6ab602aa-2e28-83ec-a050-67408c88120a)
-
-### Tugas 5
-
-1. Debouncing adalah teknik menunda eksekusi fungsi sampai pengguna berhenti melakukan input selama waktu tertentu. Pada pencarian AJAX, debouncing mengurangi jumlah request karena server hanya menerima request setelah pengguna berhenti mengetik, bukan pada setiap karakter.
-2. `await` menunggu Promise dari `fetch()` selesai sehingga kode berikutnya dapat menggunakan response yang sudah tersedia. Tanpa `await`, kode langsung menerima Promise dan dapat mencoba memproses data sebelum request selesai; akibatnya response belum dapat digunakan seperti object JSON.
-3. XSS adalah serangan ketika input tidak aman diperlakukan sebagai script oleh browser. Data dari AJAX lebih rentan jika dimasukkan menggunakan `innerHTML` tanpa escaping karena JavaScript menyusun HTML secara langsung. Template Django melakukan escaping secara default, sedangkan pada JavaScript saya menggunakan `escapeHtml` atau `textContent` dan membersihkan input server-side dengan `strip_tags` di `ModelForm`.
+- [Percakapan Tugas 5](https://chatgpt.com/share/6abdf29b-8724-83ec-8320-e9013dd4958d)

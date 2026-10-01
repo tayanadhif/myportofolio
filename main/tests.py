@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from main.forms import ProjectSubmissionForm
+from main.forms import PortfolioItemForm, ProjectSubmissionForm
 from main.models import Experience, PortfolioItem
 
 
@@ -306,6 +306,15 @@ class MainTest(TestCase):
 		self.assertIsNotNone(project)
 		self.assertNotIn("<script>", project.title)
 		self.assertNotIn("alert('xss')", project.title)
+
+	def test_project_form_preserves_description_line_breaks(self):
+		portfolio_form = PortfolioItemForm(data={
+			"title": "Line Break Project",
+			"description": "Baris pertama.\nBaris kedua.",
+		})
+
+		self.assertTrue(portfolio_form.is_valid())
+		self.assertEqual(portfolio_form.cleaned_data["description"], "Baris pertama.\nBaris kedua.")
 
 	def test_create_project_ajax_returns_json_permission_validation_and_success_statuses(self):
 		endpoint = reverse("main:create_project_ajax")

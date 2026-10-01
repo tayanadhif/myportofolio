@@ -8,7 +8,7 @@ from main.models import PortfolioItem, ProjectSubmission
 
 
 class PortfolioItemForm(ModelForm):
-    def _sanitize_text(self, value):
+    def _sanitize_text(self, value, preserve_newlines=False):
         if value is None:
             return value
 
@@ -17,14 +17,24 @@ class PortfolioItemForm(ModelForm):
         cleaned = re.sub(r"(?is)javascript\s*:", "", cleaned)
         cleaned = re.sub(r"(?is)on\w+\s*=", "", cleaned)
         cleaned = re.sub(r"(?is)alert\s*\([^)]*\)", "", cleaned)
-        cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
+        if preserve_newlines:
+            cleaned = "\n".join(
+                re.sub(r"[ \t]{2,}", " ", line).strip()
+                for line in cleaned.splitlines()
+            )
+            cleaned = re.sub(r"\n{3,}", "\n\n", cleaned).strip()
+        else:
+            cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
         return cleaned
 
     def clean_title(self):
         return self._sanitize_text(self.cleaned_data.get("title"))
 
     def clean_description(self):
-        return self._sanitize_text(self.cleaned_data.get("description"))
+        return self._sanitize_text(
+            self.cleaned_data.get("description"),
+            preserve_newlines=True,
+        )
 
     def clean_tech_stack(self):
         return self._sanitize_text(self.cleaned_data.get("tech_stack"))

@@ -1624,11 +1624,11 @@ body::after {
 }
 
 body:not(.dark-mode)::after {
-    opacity: 0.42;
+    opacity: 0.28;
 }
 
 body.dark-mode::after {
-    opacity: 0.72;
+    opacity: 0.42;
 }
 
 .toast-success { border-left: 4px solid #22c55e; }

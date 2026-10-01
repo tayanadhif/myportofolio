@@ -179,15 +179,46 @@ class MainTest(TestCase):
 			category="featured",
 		)
 
-		response = self.client.post(reverse("main:toggle_star", args=[project.pk]))
-		self.assertEqual(response.status_code, 302)
+		response = self.client.post(
+			reverse("main:toggle_star", args=[project.pk]),
+			HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+		)
+		self.assertEqual(response.status_code, 200)
+		self.assertTrue(response.json()["is_starred"])
 		self.assertEqual(project.starred_by.count(), 1)
 		self.assertIn(user, project.starred_by.all())
 
-		response = self.client.post(reverse("main:toggle_star", args=[project.pk]))
-		self.assertEqual(response.status_code, 302)
+		response = self.client.post(
+			reverse("main:toggle_star", args=[project.pk]),
+			HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+		)
+		self.assertEqual(response.status_code, 200)
+		self.assertFalse(response.json()["is_starred"])
 		self.assertEqual(project.starred_by.count(), 0)
 		self.assertNotIn(user, project.starred_by.all())
+
+	def test_delete_project_ajax_returns_success_json(self):
+		User = get_user_model()
+		user = User.objects.create_user(username="delete-editor", password="strongpass123")
+		content_type = ContentType.objects.get(app_label="main", model="portfolioitem")
+		editor_group = Group.objects.create(name="Delete Editor")
+		for codename in ["add_portfolioitem", "change_portfolioitem", "delete_portfolioitem"]:
+			editor_group.permissions.add(Permission.objects.get(content_type=content_type, codename=codename))
+		user.groups.add(editor_group)
+		self.client.force_login(user)
+		project = PortfolioItem.objects.create(
+			title="Delete Me",
+			description="Project to delete.",
+			category="featured",
+		)
+
+		response = self.client.post(
+			reverse("main:delete_project", args=[project.pk]),
+			HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+		)
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response.json()["status"], "success")
+		self.assertFalse(PortfolioItem.objects.filter(pk=project.pk).exists())
 
 	def test_project_filter_and_reorder_endpoints_work(self):
 		User = get_user_model()

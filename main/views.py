@@ -414,6 +414,12 @@ def delete_project(request, project_id):
         portfolio_item.delete()
         messages.success(request, "Project berhasil dihapus!")
 
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({
+                "status": "success",
+                "message": "Project berhasil dihapus.",
+            })
+
     return redirect("main:show_projects")
 
 
@@ -466,8 +472,20 @@ def toggle_star(request, project_id):
 
     if request.user in project.starred_by.all():
         project.starred_by.remove(request.user)
+        message = "Star project dibatalkan."
+        is_starred = False
     else:
         project.starred_by.add(request.user)
+        message = "Project berhasil diberi star."
+        is_starred = True
+
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return JsonResponse({
+            "status": "success",
+            "message": message,
+            "star_count": project.starred_by.count(),
+            "is_starred": is_starred,
+        })
 
     return redirect("main:show_projects")
 

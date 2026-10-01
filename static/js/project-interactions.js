@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const starForm = `
-            <form method="post" action="${project.id ? `/projects/${safeProjectId}/star/` : '#'}">
+            <form method="post" action="${project.id ? `/projects/${safeProjectId}/star/` : '#'}" data-star-form="true">
                 <input type="hidden" name="csrfmiddlewaretoken" value="${safeCsrfToken}">
                 <button type="submit" class="button button-secondary">${starLabel}</button>
             </form>
@@ -248,12 +248,86 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (window.showToast) {
                     window.showToast('Gagal', 'Tidak dapat terhubung ke server. Silakan coba lagi.', 'error');
                 }
-            })
-            .catch(() => {
-                window.location.reload();
             });
         });
     }
+
+    const parseAjaxResponse = (response) => response.json()
+        .catch(() => ({}))
+        .then((payload) => ({ status: response.status, payload }));
+
+    projectGrid.addEventListener('submit', (event) => {
+        const starForm = event.target.closest('[data-star-form="true"]');
+        if (!starForm) {
+            return;
+        }
+
+        event.preventDefault();
+        fetch(starForm.action, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': window.projectAjaxConfig?.csrfToken || '',
+            },
+        })
+            .then(parseAjaxResponse)
+            .then(({ status, payload }) => {
+                if (status !== 200) {
+                    throw new Error(payload.message || 'Star project gagal diperbarui.');
+                }
+                if (window.showToast) {
+                    window.showToast('Berhasil', payload.message || 'Status star diperbarui.', 'success');
+                }
+                fetchProjects();
+            })
+            .catch((error) => {
+                if (window.showToast) {
+                    window.showToast('Gagal', error.message || 'Tidak dapat memperbarui star project.', 'error');
+                }
+            });
+    });
+
+    projectGrid.addEventListener('click', (event) => {
+        const deleteButton = event.target.closest('[data-delete-project-id]');
+        if (!deleteButton) {
+            return;
+        }
+
+        const projectId = deleteButton.dataset.deleteProjectId;
+        if (!projectId || !window.confirm('Hapus project ini?')) {
+            return;
+        }
+
+        const endpoint = window.projectAjaxConfig.deleteBaseUrl.replace(
+            '00000000-0000-0000-0000-000000000000',
+            projectId,
+        );
+
+        deleteButton.disabled = true;
+        fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': window.projectAjaxConfig?.csrfToken || '',
+            },
+        })
+            .then(parseAjaxResponse)
+            .then(({ status, payload }) => {
+                if (status !== 200) {
+                    throw new Error(payload.message || 'Project gagal dihapus.');
+                }
+                if (window.showToast) {
+                    window.showToast('Berhasil', payload.message || 'Project berhasil dihapus.', 'success');
+                }
+                fetchProjects();
+            })
+            .catch((error) => {
+                deleteButton.disabled = false;
+                if (window.showToast) {
+                    window.showToast('Gagal', error.message || 'Tidak dapat menghapus project.', 'error');
+                }
+            });
+    });
 
     const cards = Array.from(projectGrid.querySelectorAll('.experience-card'));
     let draggedItemId = null;

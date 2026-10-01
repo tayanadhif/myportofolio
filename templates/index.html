@@ -59,6 +59,33 @@
     </div>
 </section>
 
+<section class="members-section" aria-labelledby="members-title">
+    <div class="container">
+        <div class="section-heading members-heading">
+            <p class="section-kicker">Community roll call</p>
+            <h2 id="members-title">Members who have logged in</h2>
+            <p class="members-intro">A running list of accounts that have visited this portfolio.</p>
+        </div>
+
+        {% if logged_in_members %}
+        <div class="members-list">
+            {% for member in logged_in_members %}
+            <div class="member-row">
+                <span class="member-status" aria-hidden="true"></span>
+                <strong>{{ member.username }}</strong>
+                <span class="member-meta">
+                    <time datetime="{{ member.last_login|date:'c' }}">Login {{ member.last_login|date:'d M Y, H:i' }}</time>
+                    <time datetime="{{ member.date_joined|date:'c' }}">Terdaftar {{ member.date_joined|date:'d M Y, H:i' }}</time>
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state">Belum ada member yang login.</p>
+        {% endif %}
+    </div>
+</section>
+
 <section class="projects" id="portfolio">
     <div class="container">
         <div class="section-heading">

@@ -1728,3 +1728,69 @@ body.dark-mode::after {
         text-align: center;
     }
 }
+
+.members-section {
+    padding: 4rem 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.members-heading {
+    margin-bottom: 1.5rem;
+}
+
+.members-heading h2 {
+    max-width: 620px;
+    font-size: clamp(2.4rem, 5vw, 4.4rem);
+    line-height: 0.95;
+    text-transform: uppercase;
+}
+
+.members-intro {
+    max-width: 520px;
+    color: var(--text-muted);
+    margin-top: 0.8rem;
+}
+
+.members-list {
+    max-width: 780px;
+    border-top: 1px solid var(--line);
+}
+
+.member-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.8rem;
+    min-height: 58px;
+    border-bottom: 1px solid var(--line);
+    color: var(--text);
+}
+
+.member-meta {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+}
+
+.member-status {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--accent-dark);
+    box-shadow: 0 0 12px var(--accent-dark);
+}
+
+@media (max-width: 560px) {
+    .member-row {
+        grid-template-columns: auto 1fr;
+        padding: 0.8rem 0;
+    }
+
+    .member-meta {
+        grid-column: 2;
+        align-items: flex-start;
+    }
+}

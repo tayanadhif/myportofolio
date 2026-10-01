@@ -204,8 +204,11 @@ class MainTest(TestCase):
 
 		response = self.client.get(reverse("main:show_projects"), {"category": "game"})
 		self.assertEqual(response.status_code, 200)
-		self.assertContains(response, "Alpha Project")
-		self.assertNotContains(response, "Beta Project")
+		self.assertContains(response, 'id="project-loading"')
+
+		json_response = self.client.get(reverse("main:get_projects_json"), {"category": "game"})
+		self.assertEqual(json_response.status_code, 200)
+		self.assertEqual([project["title"] for project in json_response.json()], ["Alpha Project"])
 
 		reorder_response = self.client.post(
 			reverse("main:update_project_order"),
@@ -273,6 +276,43 @@ class MainTest(TestCase):
 		self.assertNotIn("<script>", project.title)
 		self.assertNotIn("alert('xss')", project.title)
 
+	def test_create_project_ajax_returns_json_permission_validation_and_success_statuses(self):
+		endpoint = reverse("main:create_project_ajax")
+
+		anonymous_response = self.client.post(endpoint, {})
+		self.assertEqual(anonymous_response.status_code, 403)
+		self.assertEqual(anonymous_response.json()["status"], "error")
+
+		member = get_user_model().objects.create_user(username="ajax-member", password="strongpass123")
+		self.client.force_login(member)
+		member_response = self.client.post(endpoint, {})
+		self.assertEqual(member_response.status_code, 403)
+		self.assertEqual(member_response.json()["status"], "error")
+
+		editor = get_user_model().objects.create_user(username="ajax-editor", password="strongpass123")
+		content_type = ContentType.objects.get(app_label="main", model="portfolioitem")
+		editor_group = Group.objects.create(name="Editor")
+		for codename in ["add_portfolioitem", "change_portfolioitem", "delete_portfolioitem"]:
+			editor_group.permissions.add(Permission.objects.get(content_type=content_type, codename=codename))
+		editor.groups.add(editor_group)
+		self.client.force_login(editor)
+
+		invalid_response = self.client.post(endpoint, {"title": ""})
+		self.assertEqual(invalid_response.status_code, 400)
+		self.assertIn("title", invalid_response.json()["errors"])
+
+		success_response = self.client.post(
+			endpoint,
+			{
+				"title": "AJAX Project",
+				"description": "Created through the modal.",
+				"tech_stack": "Django",
+			},
+		)
+		self.assertEqual(success_response.status_code, 201)
+		self.assertEqual(success_response.json()["status"], "success")
+		self.assertTrue(PortfolioItem.objects.filter(title="AJAX Project").exists())
+
 	def test_login_sets_last_login_cookie_and_logout_clears_it(self):
 		User = get_user_model()
 		user = User.objects.create_user(username="tester", password="strongpass123")
@@ -331,4 +371,4 @@ class MainTest(TestCase):
 		project_response = self.client.get(reverse("main:show_projects"))
 		self.assertEqual(project_response.status_code, 200)
 		self.assertContains(project_response, "Tambah Proyek")
-		self.assertContains(project_response, "Hapus Proyek")
+		self.assertContains(project_response, "canDelete: true")

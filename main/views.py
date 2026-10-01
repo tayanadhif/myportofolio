@@ -489,16 +489,30 @@ def update_project_order(request):
     return JsonResponse({"status": "success", "updated": len(project_ids)})
 
 
-@login_required
-@editor_required
 @require_POST
 def create_project_ajax(request):
+    if not user_has_editor_access(request.user):
+        return JsonResponse(
+            {"status": "error", "message": "Kamu tidak memiliki izin untuk menambahkan project."},
+            status=403,
+        )
+
     form = ProjectForm(request.POST)
     if form.is_valid():
         project = form.save()
         return JsonResponse(
-            {"message": "Proyek berhasil ditambahkan.", "pk": str(project.id)},
+            {
+                "status": "success",
+                "message": "Proyek berhasil ditambahkan.",
+                "project": {
+                    "id": str(project.id),
+                    "title": project.title,
+                },
+            },
             status=201,
         )
 
-    return JsonResponse({"errors": form.errors.get_json_data()}, status=400)
+    return JsonResponse(
+        {"status": "error", "message": "Periksa kembali data project.", "errors": form.errors.get_json_data()},
+        status=400,
+    )

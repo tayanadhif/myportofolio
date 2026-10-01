@@ -27,15 +27,14 @@
             <div class="project-toolbar">
                 <div class="project-summary">
                     <span class="filter-chip">Total Project</span>
-                    <strong id="project-count">{{ project_list|length }}</strong>
+                    <strong id="project-count">0</strong>
                 </div>
                 <button type="button" id="clear-project-search" class="button button-secondary hidden">Reset</button>
             </div>
 
-            <form method="get" action="{% url 'main:show_projects' %}" class="project-search" id="project-search-form">
+            <form method="get" action="{% url 'main:get_projects_json' %}" class="project-search" id="project-search-form">
                 <input type="search"
                        name="title"
-                       value="{{ title_query }}"
                        placeholder="Cari berdasarkan nama proyek"
                        class="project-search__input"
                        aria-label="Cari berdasarkan nama proyek"
@@ -59,75 +58,12 @@
                 <button type="submit" class="button">Cari</button>
             </form>
 
-            <div class="experience-grid project-grid" id="project-grid">
-                {% for project in project_list %}
-                <article class="experience-card" data-project-id="{{ project.id }}" data-category="{{ project.category }}" draggable="{% if user.is_authenticated and perms.main.change_portfolioitem %}true{% else %}false{% endif %}">
-                    {% if user.is_authenticated and perms.main.change_portfolioitem %}
-                    <div class="project-card-header">
-                        <span class="drag-handle" aria-label="Geser proyek" title="Geser proyek">⋮⋮</span>
-                    </div>
-                    {% endif %}
-
-                    {% if project.project_image_url %}
-                    <img src="{{ project.project_image_url }}" alt="Gambar {{ project.title }}" class="project-image">
-                    {% endif %}
-
-                    <h2>{{ project.title }}</h2>
-                    <span class="experience-category">{{ project.tech_stack }}</span>
-                    <p class="experience-description">{{ project.description|linebreaksbr }}</p>
-
-                    <div class="project-card-actions">
-                        <div class="project-actions">
-
-                            {% if project.project_url %}
-                            <a href="{{ project.project_url }}" class="button">
-                                Lihat Project
-                            </a>
-                            {% endif %}
-
-                            <span class="star-count">
-                                ★ {{ project.starred_by.count }}
-                            </span>
-
-                            {% if user.is_authenticated %}
-                            <form method="post" action="{% url 'main:toggle_star' project.id %}">
-                                {% csrf_token %}
-                                <button type="submit" class="button button-secondary">
-                                    {% if user in project.starred_by.all %}
-                                        ★ Unstar
-                                    {% else %}
-                                        ☆ Star
-                                    {% endif %}
-                                </button>
-                            </form>
-                            {% endif %}
-
-                            {% if user.is_authenticated and perms.main.change_portfolioitem %}
-                            <a href="{% url 'main:update_project' project.id %}" class="button button-secondary">
-                                Edit
-                            </a>
-                            {% endif %}
-
-                            {% if user.is_authenticated and perms.main.delete_portfolioitem %}
-                            {% include "components/project_delete_modal.html" with project=project %}
-                            {% endif %}
-
-                        </div>
-                    </div>
-                </article>
-
-                {% empty %}
-                    {% if title_query %}
-                    <p class="empty-state" data-empty-state="true">
-                        Tidak ada proyek dengan nama tersebut.
-                    </p>
-                    {% else %}
-                    <p class="empty-state" data-empty-state="true">
-                        Belum ada proyek yang ditambahkan.
-                    </p>
-                    {% endif %}
-                {% endfor %}
-            </div>
+            <p class="loading-state" id="project-loading" role="status">Memuat project...</p>
+            <div class="experience-grid project-grid" id="project-grid" aria-live="polite"></div>
+            <p class="empty-state" id="project-empty" hidden></p>
+            <p class="empty-state" id="project-error" role="alert" hidden>
+                Project gagal dimuat. Silakan coba lagi.
+            </p>
         </div>
     </section>
 </main>
@@ -159,6 +95,7 @@
 <script>
     window.projectOrderCsrf = "{{ csrf_token }}";
     window.projectAjaxConfig = {
+        projectsEndpoint: "{% url 'main:get_projects_json' %}",
         canEdit: {{ user_can_edit|yesno:"true,false" }},
         canDelete: {{ user_can_delete|yesno:"true,false" }},
         createProjectEndpoint: "{% url 'main:create_project_ajax' %}",

@@ -1,9 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const searchForm = document.getElementById('project-search-form');
     const searchInput = document.getElementById('project-search-input');
     const categorySelect = document.querySelector('#project-search-form select[name="category"]');
     const sortSelect = document.querySelector('#project-search-form select[name="sort"]');
     const projectGrid = document.getElementById('project-grid');
     const projectCount = document.getElementById('project-count');
+    const loadingState = document.getElementById('project-loading');
+    const emptyState = document.getElementById('project-empty');
+    const errorState = document.getElementById('project-error');
     const clearButton = document.getElementById('clear-project-search');
     const projectModal = document.getElementById('project-modal');
     const openProjectModalButton = document.getElementById('open-project-modal');
@@ -14,7 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    const projectApiUrl = '/api/projects/';
+    const projectApiUrl = window.projectAjaxConfig?.projectsEndpoint || '/api/projects/';
+
+    const setProjectState = (state) => {
+        if (loadingState) loadingState.hidden = state !== 'loading';
+        if (emptyState) emptyState.hidden = state !== 'empty';
+        if (errorState) errorState.hidden = state !== 'error';
+        projectGrid.hidden = state === 'loading' || state === 'empty' || state === 'error';
+    };
 
     const escapeHtml = (value = '') => String(value)
         .replace(/&/g, '&amp;')
@@ -77,14 +88,15 @@ document.addEventListener('DOMContentLoaded', () => {
         projectGrid.innerHTML = '';
 
         if (!projects.length) {
-            const emptyState = document.createElement('p');
-            emptyState.className = 'empty-state';
-            emptyState.dataset.emptyState = 'true';
-            emptyState.textContent = searchInput && searchInput.value.trim() ? 'Tidak ada proyek dengan nama tersebut.' : 'Belum ada proyek yang ditambahkan.';
-            projectGrid.appendChild(emptyState);
+            if (emptyState) {
+                emptyState.textContent = searchInput && searchInput.value.trim()
+                    ? 'Tidak ada proyek dengan nama tersebut.'
+                    : 'Belum ada proyek yang ditambahkan.';
+            }
             if (projectCount) {
                 projectCount.textContent = '0';
             }
+            setProjectState('empty');
             return;
         }
 
@@ -95,9 +107,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (projectCount) {
             projectCount.textContent = String(projects.length);
         }
+        setProjectState('ready');
     };
 
     const fetchProjects = () => {
+        setProjectState('loading');
         const params = new URLSearchParams();
         const searchValue = searchInput ? searchInput.value.trim() : '';
         const categoryValue = categorySelect ? categorySelect.value : '';
@@ -108,10 +122,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sortValue) params.set('sort', sortValue);
 
         fetch(`${projectApiUrl}?${params.toString()}`)
-            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Project request failed');
+                }
+                return response.json();
+            })
             .then((data) => renderProjectList(Array.isArray(data) ? data : []))
             .catch(() => {
-                window.location.reload();
+                projectGrid.innerHTML = '';
+                if (projectCount) {
+                    projectCount.textContent = '0';
+                }
+                setProjectState('error');
             });
     };
 
@@ -123,6 +146,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (searchInput) {
         searchInput.addEventListener('input', debouncedFetchProjects);
+    }
+
+    if (searchForm) {
+        searchForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            clearTimeout(debounceTimer);
+            fetchProjects();
+        });
     }
 
     if (categorySelect) {
@@ -185,7 +216,11 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then((response) => response.json().then((payload) => ({ status: response.status, payload })))
             .then(({ status, payload }) => {
-                if (status >= 400) {
+                projectCreateForm.querySelectorAll('[data-error-for]').forEach((fieldError) => {
+                    fieldError.textContent = '';
+                });
+
+                if (status !== 201) {
                     Object.entries(payload.errors || {}).forEach(([field, errors]) => {
                         const fieldError = projectCreateForm.querySelector(`[data-error-for="${field}"]`);
                         if (fieldError) {
@@ -193,6 +228,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             fieldError.textContent = list.map((error) => error.message || error).join(', ');
                         }
                     });
+                    if (window.showToast) {
+                        window.showToast('Gagal', payload.message || 'Project gagal ditambahkan.', 'error');
+                    }
                     return;
                 }
 
@@ -297,7 +335,5 @@ document.addEventListener('DOMContentLoaded', () => {
         sortSelect.dataset.ajaxBound = 'true';
     }
 
-    if (searchInput && searchInput.value.trim()) {
-        fetchProjects();
-    }
+    fetchProjects();
 });

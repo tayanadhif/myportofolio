@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.projectAjaxConfig && window.projectAjaxConfig.canDelete) {
             actionButtons.push(`
                 <button type="button" class="button button-danger" data-delete-project-id="${safeProjectId}">
-                    Hapus Proyek
+                    Hapus Project
                 </button>
             `);
         }
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         card.innerHTML = `
-            ${window.projectAjaxConfig && window.projectAjaxConfig.canEdit ? '<div class="project-card-header"><span class="drag-handle" aria-label="Geser proyek" title="Geser proyek">⋮⋮</span></div>' : ''}
+            ${window.projectAjaxConfig && window.projectAjaxConfig.canEdit ? '<div class="project-card-header"><span class="drag-handle" aria-label="Geser project" title="Geser project">⋮⋮</span></div>' : ''}
             ${image}
             <h2>${escapeHtml(project.title)}</h2>
             <span class="experience-category">${escapeHtml(project.tech_stack || '')}</span>
@@ -93,8 +93,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!projects.length) {
             if (emptyState) {
                 emptyState.textContent = searchInput && searchInput.value.trim()
-                    ? 'Tidak ada proyek dengan nama tersebut.'
-                    : 'Belum ada proyek yang ditambahkan.';
+                    ? 'Tidak ada project dengan nama tersebut.'
+                    : 'Belum ada project yang ditambahkan.';
             }
             if (projectCount) {
                 projectCount.textContent = '0';

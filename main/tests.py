@@ -410,5 +410,5 @@ class MainTest(TestCase):
 
 		project_response = self.client.get(reverse("main:show_projects"))
 		self.assertEqual(project_response.status_code, 200)
-		self.assertContains(project_response, "Tambah Proyek")
+		self.assertContains(project_response, "Tambah Project")
 		self.assertContains(project_response, "canDelete: true")

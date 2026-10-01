@@ -8,16 +8,16 @@
             class="project-form-modal__backdrop"
             popovertarget="add-project-modal"
             popovertargetaction="hide"
-            aria-label="Tutup form tambah proyek"></button>
+            aria-label="Tutup form tambah project"></button>
 
     <div class="project-form-modal__content">
         <button type="button"
                 class="project-form-modal__close"
                 popovertarget="add-project-modal"
                 popovertargetaction="hide"
-                aria-label="Tutup form tambah proyek">×</button>
+                aria-label="Tutup form tambah project">×</button>
 
-        <h2 id="add-project-modal-title">Tambah Proyek Baru</h2>
+        <h2 id="add-project-modal-title">Tambah Project Baru</h2>
         <form id="project-form"
               method="post"
               action="{% url 'main:create_project' %}"
@@ -37,7 +37,7 @@
                         class="button button-secondary"
                         popovertarget="add-project-modal"
                         popovertargetaction="hide">Batal</button>
-                <button type="submit" class="button">Tambah Proyek</button>
+                <button type="submit" class="button">Tambah Project</button>
             </div>
         </form>
     </div>

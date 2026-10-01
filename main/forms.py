@@ -108,10 +108,10 @@ class ProjectSubmissionForm(ModelForm):
             "is_featured",
         ]
         labels = {
-            "title": "Judul Proyek",
+            "title": "Judul Project",
             "category": "Kategori",
             "estimated_budget": "Estimasi Biaya",
-            "is_featured": "Prioritaskan proyek ini",
+            "is_featured": "Prioritaskan project ini",
         }
         widgets = {
             "title": TextInput(

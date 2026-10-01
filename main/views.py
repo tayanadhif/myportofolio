@@ -521,7 +521,7 @@ def create_project_ajax(request):
         return JsonResponse(
             {
                 "status": "success",
-                "message": "Proyek berhasil ditambahkan.",
+                "message": "Project berhasil ditambahkan.",
                 "project": {
                     "id": str(project.id),
                     "title": project.title,

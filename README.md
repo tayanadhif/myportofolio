@@ -35,3 +35,9 @@ Saya menggunakan ChatGPT sebagai bantuan dalam mengembangkan website ini. AI mem
 **ChatGPT history conversation:**
 - [Percakapan Tugas 1, 2, dan 3](https://chatgpt.com/share/6aaea516-5c38-83ec-81cb-97562004286b)
 - [Percakapan Tugas 4](https://chatgpt.com/share/6ab602aa-2e28-83ec-a050-67408c88120a)
+
+### Tugas 5
+
+1. Debouncing adalah teknik menunda eksekusi fungsi sampai pengguna berhenti melakukan input selama waktu tertentu. Pada pencarian AJAX, debouncing mengurangi jumlah request karena server hanya menerima request setelah pengguna berhenti mengetik, bukan pada setiap karakter.
+2. `await` menunggu Promise dari `fetch()` selesai sehingga kode berikutnya dapat menggunakan response yang sudah tersedia. Tanpa `await`, kode langsung menerima Promise dan dapat mencoba memproses data sebelum request selesai; akibatnya response belum dapat digunakan seperti object JSON.
+3. XSS adalah serangan ketika input tidak aman diperlakukan sebagai script oleh browser. Data dari AJAX lebih rentan jika dimasukkan menggunakan `innerHTML` tanpa escaping karena JavaScript menyusun HTML secara langsung. Template Django melakukan escaping secara default, sedangkan pada JavaScript saya menggunakan `escapeHtml` atau `textContent` dan membersihkan input server-side dengan `strip_tags` di `ModelForm`.

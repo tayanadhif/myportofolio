@@ -41,26 +41,29 @@ document.addEventListener('DOMContentLoaded', () => {
         card.dataset.category = project.category;
         card.draggable = (window.projectAjaxConfig && window.projectAjaxConfig.canEdit === true) ? 'true' : 'false';
 
+        const safeProjectId = escapeHtml(project.id || '');
+        const safeCsrfToken = escapeHtml(window.projectAjaxConfig?.csrfToken || '');
+        const safeStarCount = escapeHtml(project.star_count || 0);
         const image = project.project_image_url ? `<img src="${escapeHtml(project.project_image_url)}" alt="Gambar ${escapeHtml(project.title)}" class="project-image">` : '';
         const projectUrl = project.project_url ? `<a href="${escapeHtml(project.project_url)}" class="button">Lihat Project</a>` : '';
         const starLabel = project.is_starred ? '★ Unstar' : '☆ Star';
         const actionButtons = [];
 
         if (window.projectAjaxConfig && window.projectAjaxConfig.canEdit) {
-            actionButtons.push(`<a href="${project.id ? `/projects/${project.id}/update/` : '#'}" class="button button-secondary">Edit</a>`);
+            actionButtons.push(`<a href="${project.id ? `/projects/${safeProjectId}/update/` : '#'}" class="button button-secondary">Edit</a>`);
         }
 
         if (window.projectAjaxConfig && window.projectAjaxConfig.canDelete) {
             actionButtons.push(`
-                <button type="button" class="button button-danger" data-delete-project-id="${project.id}">
+                <button type="button" class="button button-danger" data-delete-project-id="${safeProjectId}">
                     Hapus Proyek
                 </button>
             `);
         }
 
         const starForm = `
-            <form method="post" action="${project.id ? `/projects/${project.id}/star/` : '#'}">
-                <input type="hidden" name="csrfmiddlewaretoken" value="${window.projectAjaxConfig?.csrfToken || ''}">
+            <form method="post" action="${project.id ? `/projects/${safeProjectId}/star/` : '#'}">
+                <input type="hidden" name="csrfmiddlewaretoken" value="${safeCsrfToken}">
                 <button type="submit" class="button button-secondary">${starLabel}</button>
             </form>
         `;
@@ -74,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="project-card-actions">
                 <div class="project-actions">
                     ${projectUrl}
-                    <span class="star-count">★ ${project.star_count || 0}</span>
+                    <span class="star-count">★ ${safeStarCount}</span>
                     ${starForm}
                     ${actionButtons.join('')}
                 </div>
@@ -239,6 +242,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetchProjects();
                 if (window.showToast) {
                     window.showToast('Berhasil', payload.message || 'Project berhasil ditambahkan!', 'success');
+                }
+            })
+            .catch(() => {
+                if (window.showToast) {
+                    window.showToast('Gagal', 'Tidak dapat terhubung ke server. Silakan coba lagi.', 'error');
                 }
             })
             .catch(() => {

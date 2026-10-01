@@ -1180,6 +1180,424 @@ body.dark-mode .contact-form textarea::placeholder {
     color: var(--text-muted);
 }
 
+/* Bang Toon live-stage visual system */
+:root {
+    --ink: #f8f3e8;
+    --paper: #090a0e;
+    --panel: #14171e;
+    --panel-soft: #191d25;
+    --accent: #ff473d;
+    --accent-dark: #ffb21a;
+    --line: #343943;
+    --text: #f8f3e8;
+    --text-muted: #a9afbb;
+    --shadow: rgba(0, 0, 0, 0.36);
+    --radius: 6px;
+    --button-text: #090a0e;
+    --project-panel: rgba(12, 14, 19, 0.88);
+    --project-panel-border: #ff473d;
+    --project-panel-line: #343943;
+    --project-panel-text: #f8f3e8;
+    --field-bg: rgba(10, 12, 16, 0.92);
+    --field-text: #f8f3e8;
+    --field-border: #4b505b;
+}
+
+body {
+    position: relative;
+    isolation: isolate;
+    font-family: "Space Grotesk", sans-serif;
+    background-color: var(--paper);
+    background-image:
+        linear-gradient(180deg, rgba(9, 10, 14, 0.68), rgba(9, 10, 14, 0.96) 72%),
+        url("../img/concert.png");
+    background-position: center top;
+    background-size: cover;
+    background-attachment: fixed;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        linear-gradient(90deg, rgba(255, 71, 61, 0.06) 1px, transparent 1px),
+        linear-gradient(rgba(255, 178, 26, 0.045) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: linear-gradient(to bottom, black, transparent 78%);
+}
+
+body.dark-mode {
+    --ink: #f8f3e8;
+    --paper: #050609;
+    --panel: #11141a;
+    --panel-soft: #171a21;
+    --accent: #ff5b4e;
+    --accent-dark: #ffc247;
+    --line: #30343d;
+    --text: #f8f3e8;
+    --text-muted: #b5bac5;
+    --button-text: #090a0e;
+    --project-panel: rgba(7, 8, 12, 0.9);
+    --project-panel-border: #ff5b4e;
+    --project-panel-line: #30343d;
+    --project-panel-text: #f8f3e8;
+    --field-bg: rgba(8, 10, 14, 0.94);
+    --field-text: #f8f3e8;
+    --field-border: #555b68;
+}
+
+h1, h2, h3, .brand {
+    font-family: "Bebas Neue", "Space Grotesk", sans-serif;
+    letter-spacing: 0.025em;
+}
+
+.site-header {
+    border-bottom: 1px solid rgba(255, 178, 26, 0.28);
+    background: rgba(9, 10, 14, 0.76);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.brand {
+    color: var(--accent-dark);
+    font-size: 1.45rem;
+    text-transform: uppercase;
+}
+
+.site-header nav a,
+.nav-user {
+    color: var(--text-muted);
+}
+
+.site-header nav a:hover {
+    color: var(--accent-dark);
+}
+
+.theme-toggle {
+    background: var(--panel);
+    border-color: var(--line);
+    color: var(--accent-dark);
+}
+
+.hero {
+    min-height: 720px;
+    display: flex;
+    align-items: center;
+    padding: 7rem 0 5rem;
+    position: relative;
+}
+
+.hero::after {
+    content: "LIVE / BUILD / REPEAT";
+    position: absolute;
+    right: 1.5rem;
+    bottom: 2.5rem;
+    color: rgba(255, 178, 26, 0.62);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    writing-mode: vertical-rl;
+}
+
+.hero-grid {
+    width: 100%;
+    align-items: end;
+}
+
+.hero-kicker,
+.section-kicker {
+    color: var(--accent-dark);
+    letter-spacing: 0.16em;
+}
+
+.hero-identity h1 {
+    max-width: 720px;
+    color: var(--text);
+    font-size: clamp(4rem, 10vw, 8.5rem);
+    line-height: 0.86;
+    text-transform: uppercase;
+    text-shadow: 8px 8px 0 rgba(255, 71, 61, 0.18);
+}
+
+.hero-identity h1::first-line {
+    color: var(--accent);
+}
+
+.bio {
+    color: var(--text-muted);
+    font-size: 1.02rem;
+    max-width: 570px;
+}
+
+.hero-photo {
+    max-width: 390px;
+}
+
+.photo-block {
+    inset: 1.25rem -1rem -1rem 1.25rem;
+    border-radius: 2px;
+    background: var(--accent);
+    box-shadow: 18px 18px 0 rgba(255, 178, 26, 0.84);
+}
+
+.avatar {
+    border: 5px solid var(--text);
+    border-radius: 2px;
+    filter: saturate(0.86) contrast(1.08);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48);
+}
+
+.social-link,
+.button,
+.submit-button {
+    border-radius: 3px;
+}
+
+.social-link {
+    background: var(--accent);
+    color: var(--button-text);
+}
+
+.social-link:hover,
+.button:hover,
+.submit-button:hover {
+    background: var(--accent-dark);
+    color: var(--button-text);
+}
+
+.brand-strip {
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 1rem 0;
+    background: rgba(12, 14, 19, 0.72);
+}
+
+.badge {
+    border-radius: 3px;
+    background: transparent;
+    border-color: var(--line);
+    color: var(--text-muted);
+    box-shadow: none;
+}
+
+.projects,
+.experience-section,
+.resume-section,
+.contact {
+    border-color: var(--line);
+}
+
+.project-card,
+.timeline-item,
+.education-item,
+.achievement-card,
+.contact-form,
+.experience-card {
+    background: rgba(20, 23, 30, 0.9);
+    border-color: var(--line);
+    border-radius: 3px;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.2);
+}
+
+.project-card:hover,
+.experience-card:hover,
+.achievement-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 18px 42px rgba(255, 71, 61, 0.1);
+}
+
+.project-image {
+    filter: saturate(0.82);
+}
+
+.project-page-section,
+.project-form-section {
+    background: transparent;
+}
+
+.project-page-container,
+.project-form-container {
+    background: var(--project-panel);
+    border: 1px solid var(--project-panel-border);
+    border-radius: 3px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+    backdrop-filter: blur(8px);
+}
+
+.project-header {
+    border-color: var(--project-panel-line);
+}
+
+.project-header h1,
+.project-form-title {
+    font-size: clamp(2.8rem, 6vw, 5rem);
+    text-transform: uppercase;
+}
+
+.project-summary {
+    border-radius: 3px;
+    background: rgba(255, 178, 26, 0.1);
+    border-color: rgba(255, 178, 26, 0.4);
+}
+
+.filter-chip {
+    border-radius: 2px;
+    background: var(--accent);
+    color: var(--button-text);
+}
+
+.project-search__input,
+.project-filter,
+.form-group input,
+.form-group textarea,
+.form-group select,
+.contact-form input,
+.contact-form textarea {
+    border-radius: 3px;
+    background: rgba(8, 10, 14, 0.8);
+    color: var(--text);
+}
+
+.project-modal__content,
+.project-delete-modal__content {
+    border-radius: 3px;
+    background: #11141a;
+    border-color: var(--accent);
+}
+
+.toast-component {
+    border-radius: 3px;
+    background: #15181f;
+    border-color: var(--accent-dark);
+}
+
+.site-footer {
+    border-top: 1px solid var(--line);
+    background: rgba(5, 6, 9, 0.72);
+}
+
+@media (max-width: 820px) {
+    .hero {
+        min-height: auto;
+        padding: 5rem 0 4rem;
+    }
+
+    .hero-grid {
+        gap: 3rem;
+    }
+
+    .hero-photo {
+        grid-row: 1;
+        justify-self: start;
+        max-width: min(78vw, 360px);
+    }
+
+    .hero::after {
+        display: none;
+    }
+
+    .project-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 560px) {
+    .container {
+        padding: 0 1rem;
+    }
+
+    .hero-identity h1 {
+        font-size: clamp(3.6rem, 18vw, 5.8rem);
+    }
+
+    .header-inner {
+        min-height: 64px;
+    }
+
+    .brand {
+        font-size: 1.2rem;
+    }
+
+    .project-page-container,
+    .project-form-container {
+        padding: 1.25rem 1rem 1.75rem;
+    }
+
+    .project-search .button {
+        width: 100%;
+    }
+}
+
+body:not(.dark-mode) {
+    --paper: #eee8dc;
+    --panel: #fffaf1;
+    --panel-soft: #fffdf8;
+    --line: #d5c9b8;
+    --text: #28231e;
+    --text-muted: #665e53;
+    --shadow: rgba(67, 49, 32, 0.14);
+    --button-text: #fffaf1;
+    --project-panel: rgba(255, 250, 241, 0.9);
+    --project-panel-border: #c93e36;
+    --project-panel-line: #d5c9b8;
+    --project-panel-text: #28231e;
+    --field-bg: rgba(255, 253, 248, 0.92);
+    --field-text: #28231e;
+    --field-border: #c6b8a6;
+    color: var(--text);
+    background-color: var(--paper);
+    background-image:
+        linear-gradient(180deg, rgba(245, 239, 226, 0.46), rgba(238, 232, 220, 0.84) 74%),
+        url("../img/concert.png");
+}
+
+body:not(.dark-mode) .site-header {
+    background: rgba(255, 250, 241, 0.78);
+    border-bottom-color: rgba(201, 62, 54, 0.3);
+}
+
+body:not(.dark-mode) .project-card,
+body:not(.dark-mode) .timeline-item,
+body:not(.dark-mode) .education-item,
+body:not(.dark-mode) .achievement-card,
+body:not(.dark-mode) .contact-form,
+body:not(.dark-mode) .experience-card {
+    background: rgba(255, 253, 248, 0.9);
+    border-color: #d5c9b8;
+    color: var(--text);
+    box-shadow: 0 18px 42px rgba(67, 49, 32, 0.12);
+}
+
+body:not(.dark-mode) .project-page-container,
+body:not(.dark-mode) .project-form-container {
+    background: rgba(255, 250, 241, 0.9);
+}
+
+body:not(.dark-mode) .project-search__input,
+body:not(.dark-mode) .project-filter,
+body:not(.dark-mode) .form-group input,
+body:not(.dark-mode) .form-group textarea,
+body:not(.dark-mode) .form-group select,
+body:not(.dark-mode) .contact-form input,
+body:not(.dark-mode) .contact-form textarea {
+    background: rgba(255, 253, 248, 0.94);
+    color: #28231e;
+    border-color: #c6b8a6;
+}
+
+body:not(.dark-mode) .theme-toggle {
+    background: #fffaf1;
+    color: #c93e36;
+}
+
+body.dark-mode {
+    background-image:
+        linear-gradient(180deg, rgba(5, 6, 9, 0.72), rgba(5, 6, 9, 0.96) 72%),
+        url("../img/concert.png");
+}
+
 .toast-success { border-left: 4px solid #22c55e; }
 .toast-error { border-left: 4px solid #b42318; }
 .toast-normal { border-left: 4px solid var(--accent); }

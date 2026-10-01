@@ -3,6 +3,7 @@ from functools import wraps
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
@@ -28,9 +29,6 @@ def user_has_editor_access(user):
         return False
 
     if user.is_superuser:
-        return True
-
-    if user.groups.filter(name="Editor").exists():
         return True
 
     return user.has_perms(EDITOR_REQUIRED_PERMISSIONS)
@@ -137,7 +135,7 @@ def get_portfolio_xml(request):
 
 
 @login_required
-@editor_required
+@permission_required("main.add_portfolioitem", raise_exception=True)
 def create_portfolio_item(request):
     form = PortfolioItemForm(request.POST or None)
 
@@ -308,7 +306,7 @@ def get_projects_xml(request):
 
 
 @login_required
-@editor_required
+@permission_required("main.add_portfolioitem", raise_exception=True)
 def create_project(request):
     form = PortfolioItemForm(request.POST or None)
 
@@ -491,7 +489,7 @@ def update_project_order(request):
 
 @require_POST
 def create_project_ajax(request):
-    if not user_has_editor_access(request.user):
+    if not request.user.is_authenticated or not request.user.has_perm("main.add_portfolioitem"):
         return JsonResponse(
             {"status": "error", "message": "Kamu tidak memiliki izin untuk menambahkan project."},
             status=403,

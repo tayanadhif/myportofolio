@@ -17,43 +17,29 @@
             {% endif %}
         </div>
 
-        <form method="get" action="{% url 'main:show_portfolio' %}" class="project-search">
+        <form method="get" action="{% url 'main:get_portfolio_json' %}" class="project-search" id="portfolio-search-form">
             <input type="search"
                    name="title"
-                   value="{{ title_query }}"
                    placeholder="Cari berdasarkan judul portfolio"
                    class="project-search__input"
+                   id="portfolio-search-input"
                    aria-label="Cari berdasarkan judul portfolio">
             <button type="submit" class="button">Cari</button>
         </form>
 
-        {% if portfolio_items %}
-            <div class="experience-grid project-grid">
-                {% for item in portfolio_items %}
-                <article class="experience-card">
-                    <span class="experience-category">{{ item.category }}</span>
-                    <h2>{{ item.title }}</h2>
-                    <p class="experience-description">{{ item.description }}</p>
-                    <div class="project-card-actions">
-                        <div class="project-actions">
-                            {% if item.link %}
-                            <a href="{{ item.link }}" class="button" target="_blank" rel="noreferrer">Lihat detail</a>
-                            {% endif %}
-                            {% if user.is_authenticated and perms.main.delete_portfolioitem %}
-                            {% include "components/portfolio_delete_modal.html" with item=item %}
-                            {% endif %}
-                        </div>
-                    </div>
-                </article>
-                {% endfor %}
-            </div>
-        {% else %}
-            {% if title_query %}
-            <p class="empty-state">Tidak ada portfolio dengan judul tersebut.</p>
-            {% else %}
-            <p class="empty-state">Belum ada item portofolio yang ditambahkan.</p>
-            {% endif %}
-        {% endif %}
+        <p class="loading-state" id="portfolio-loading" role="status">Memuat portfolio...</p>
+        <div class="experience-grid project-grid" id="portfolio-grid" aria-live="polite"></div>
+        <p class="empty-state" id="portfolio-empty" hidden></p>
+        <p class="empty-state" id="portfolio-error" role="alert" hidden>Portfolio gagal dimuat. Silakan coba lagi.</p>
     </div>
 </section>
+
+<script>
+    window.portfolioAjaxConfig = {
+        endpoint: "{% url 'main:get_portfolio_json' %}",
+        canDelete: {{ user.is_authenticated|yesno:"true,false" }} && {{ perms.main.delete_portfolioitem|yesno:"true,false" }},
+        deleteBaseUrl: "{% url 'main:delete_portfolio_item' '00000000-0000-0000-0000-000000000000' %}",
+        csrfToken: "{{ csrf_token }}",
+    };
+</script>
 {% endblock %}

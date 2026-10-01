@@ -95,33 +95,8 @@ def show_experience(request):
 
 
 def show_portfolio(request):
-    title_query = request.GET.get("title", "").strip()
-    portfolio_items = PortfolioItem.objects.order_by("created_at")
-
-    if title_query:
-        portfolio_items = portfolio_items.filter(title__icontains=title_query)
-
-    portfolio_items = list(portfolio_items)
-
-    if not portfolio_items:
-        portfolio_items = [
-            PortfolioItem(
-                title="Portfolio Website",
-                description="A personal portfolio website built with Django to present my profile, experience, and projects.",
-                category="featured",
-                link="https://nadhif-aydin-myportofolio.pws.cs.ui.ac.id/",
-            ),
-            PortfolioItem(
-                title="Game Development",
-                description="Creating gameplay videos, longplays, and gaming projects while developing editing and digital content production skills.",
-                category="game",
-            ),
-        ]
-
     context = {
         "name": "Nadhif Aydin Adinandra",
-        "portfolio_items": portfolio_items,
-        "title_query": title_query,
     }
 
     return render(request, "portfolio.html", context)
@@ -129,14 +104,25 @@ def show_portfolio(request):
 
 def get_portfolio_json(request):
     title_query = request.GET.get("title", "").strip()
-    portfolio_items = PortfolioItem.objects.all()
+    portfolio_items = PortfolioItem.objects.prefetch_related("starred_by").order_by("created_at")
 
     if title_query:
         portfolio_items = portfolio_items.filter(title__icontains=title_query)
 
-    portfolio_items_json = serializers.serialize("json", portfolio_items, use_natural_foreign_keys=True)
+    data = []
+    for item in portfolio_items:
+        starred_users = list(item.starred_by.all())
+        data.append({
+            "id": str(item.id),
+            "title": item.title,
+            "description": item.description,
+            "category": item.category,
+            "link": item.link,
+            "star_count": len(starred_users),
+            "is_starred": request.user.is_authenticated and request.user in starred_users,
+        })
 
-    return HttpResponse(portfolio_items_json, content_type="application/json")
+    return JsonResponse(data, safe=False)
 
 
 def get_portfolio_xml(request):
@@ -385,22 +371,15 @@ def update_project(request, project_id):
 
 
 def show_portfolio_deserialized(request):
-    portfolio_items = list(PortfolioItem.objects.all().order_by("created_at"))
+    title_query = request.GET.get("title", "").strip()
+    portfolio_items = PortfolioItem.objects.all().order_by("created_at")
 
-    if request.GET.get("title"):
-        portfolio_items = list(
-            PortfolioItem.objects.filter(title__icontains=request.GET.get("title", "").strip())
-            .order_by("created_at")
-        )
-
-    json_response = get_portfolio_json(request)
-    serialized_data = json_response.content.decode("utf-8")
-    deserialized_objects = list(serializers.deserialize("json", serialized_data))
-    portfolio_items = [item.object for item in deserialized_objects] or portfolio_items
+    if title_query:
+        portfolio_items = portfolio_items.filter(title__icontains=title_query)
 
     context = {
         "name": "Nadhif Aydin Adinandra",
-        "portfolio_items": portfolio_items,
+        "portfolio_items": list(portfolio_items),
     }
 
     return render(request, "portfolio_deserialized.html", context)

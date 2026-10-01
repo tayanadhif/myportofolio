@@ -66,7 +66,8 @@ class MainTest(TestCase):
 		self.assertEqual(response.status_code, 200)
 		self.assertTemplateUsed(response, "portfolio.html")
 		self.assertContains(response, "Portfolio")
-		self.assertContains(response, "Portfolio Website")
+		self.assertContains(response, 'id="portfolio-loading"')
+		self.assertContains(response, 'id="portfolio-grid"')
 
 	def test_portfolio_page_displays_model_data_when_items_exist(self):
 		portfolio_item = PortfolioItem.objects.create(
@@ -77,17 +78,14 @@ class MainTest(TestCase):
 		)
 		response = self.client.get(reverse("main:show_portfolio"))
 		self.assertEqual(response.status_code, 200)
-		self.assertContains(response, portfolio_item.title)
-		self.assertContains(response, portfolio_item.description)
-		self.assertContains(response, portfolio_item.category)
-		self.assertContains(response, portfolio_item.link)
+		self.assertNotContains(response, portfolio_item.title)
+		self.assertContains(response, reverse("main:get_portfolio_json"))
 
-	def test_portfolio_page_shows_fallback_items_when_no_data_exists(self):
+	def test_portfolio_page_shows_empty_state_container_when_no_data_exists(self):
 		PortfolioItem.objects.all().delete()
 		response = self.client.get(reverse("main:show_portfolio"))
 		self.assertEqual(response.status_code, 200)
-		self.assertContains(response, "Portfolio Website")
-		self.assertContains(response, "Game Development")
+		self.assertContains(response, 'id="portfolio-empty"')
 
 	def test_portfolio_json_api_returns_serialized_items(self):
 		PortfolioItem.objects.create(
@@ -99,7 +97,9 @@ class MainTest(TestCase):
 		response = self.client.get(reverse("main:get_portfolio_json"))
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(response["Content-Type"], "application/json")
-		self.assertContains(response, "Project Demo")
+		self.assertEqual(response.json()[0]["title"], "Project Demo")
+		self.assertEqual(response.json()[0]["star_count"], 0)
+		self.assertFalse(response.json()[0]["is_starred"])
 
 	def test_portfolio_xml_api_returns_serialized_items(self):
 		PortfolioItem.objects.create(
@@ -326,7 +326,7 @@ class MainTest(TestCase):
 		portfolio_response = self.client.get(reverse("main:show_portfolio"))
 		self.assertEqual(portfolio_response.status_code, 200)
 		self.assertContains(portfolio_response, "Tambah Portfolio")
-		self.assertContains(portfolio_response, "Hapus")
+		self.assertContains(portfolio_response, "canDelete: true")
 
 		project_response = self.client.get(reverse("main:show_projects"))
 		self.assertEqual(project_response.status_code, 200)

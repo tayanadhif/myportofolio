@@ -1536,7 +1536,7 @@ body:not(.dark-mode) {
     --panel-soft: #fffdf8;
     --line: #d5c9b8;
     --text: #28231e;
-    --text-muted: #665e53;
+    --text-muted: #2d2721;
     --shadow: rgba(67, 49, 32, 0.14);
     --button-text: #fffaf1;
     --project-panel: rgba(255, 250, 241, 0.9);
@@ -1556,6 +1556,11 @@ body:not(.dark-mode) {
 body:not(.dark-mode) .site-header {
     background: rgba(255, 250, 241, 0.78);
     border-bottom-color: rgba(201, 62, 54, 0.3);
+}
+
+body:not(.dark-mode) .site-footer {
+    background: rgba(255, 250, 241, 0.78);
+    color: var(--text-muted);
 }
 
 body:not(.dark-mode) .brand-strip {

@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from main.forms import PortfolioItemForm, ProjectSubmissionForm
-from main.models import Experience, PortfolioItem
+from main.models import ChatMessage, Experience, PortfolioItem, ProjectComment, UserConnection, UserProfile
 
 
 class MainTest(TestCase):
@@ -26,6 +26,146 @@ class MainTest(TestCase):
 		self.assertContains(response, "S1 Ilmu Komputer")
 		self.assertNotContains(response, self.experience.title)
 		self.assertContains(response, f'href="{reverse("main:show_experience")}"')
+
+	def test_register_creates_user_profile(self):
+		response = self.client.post(
+			reverse("main:register"),
+			{
+				"full_name": "New Member",
+				"username": "new-member",
+				"email": "new-member@example.com",
+				"password1": "SafePassword!842",
+				"password2": "SafePassword!842",
+			},
+		)
+		self.assertRedirects(response, reverse("main:login"))
+		user = get_user_model().objects.get(username="new-member")
+		self.assertEqual(user.email, "new-member@example.com")
+		self.assertEqual(user.profile.full_name, "New Member")
+
+	def test_profile_page_requires_login_and_updates_profile_fields(self):
+		profile_url = reverse("main:account_profile")
+		anonymous_response = self.client.get(profile_url)
+		self.assertEqual(anonymous_response.status_code, 302)
+
+		user = get_user_model().objects.create_user(
+			username="profile-user",
+			email="old@example.com",
+			password="strongpass123",
+		)
+		self.client.force_login(user)
+		response = self.client.post(
+			profile_url,
+			{
+				"username": "profile-user",
+				"email": "profile@example.com",
+				"full_name": "Profile User",
+				"phone": "081234567890",
+				"date_of_birth": "2000-01-02",
+				"bio": "Hello from my profile.",
+				"connections-TOTAL_FORMS": "1",
+				"connections-INITIAL_FORMS": "0",
+				"connections-MIN_NUM_FORMS": "0",
+				"connections-MAX_NUM_FORMS": "20",
+				"connections-0-platform": "instagram",
+				"connections-0-label": "My Instagram",
+				"connections-0-url": "https://instagram.com/member",
+			},
+		)
+		self.assertRedirects(response, profile_url)
+		user.refresh_from_db()
+		user.profile.refresh_from_db()
+		self.assertEqual(user.email, "profile@example.com")
+		self.assertEqual(user.profile.full_name, "Profile User")
+		self.assertEqual(user.profile.phone, "081234567890")
+		self.assertEqual(user.profile.date_of_birth.isoformat(), "2000-01-02")
+		self.assertEqual(user.profile.bio, "Hello from my profile.")
+		self.assertEqual(user.profile.connections.count(), 1)
+		self.assertEqual(user.profile.connections.first().platform, "instagram")
+
+	def test_public_member_profile_displays_connections_without_private_fields(self):
+		user = get_user_model().objects.create_user(
+			username="public-member",
+			email="private@example.com",
+			password="strongpass123",
+		)
+		user.profile.full_name = "Public Member"
+		user.profile.phone = "081234567890"
+		user.profile.save()
+		UserConnection.objects.create(
+			profile=user.profile,
+			platform="youtube",
+			label="My Channel",
+			url="https://youtube.com/@member",
+		)
+
+		response = self.client.get(reverse("main:public_member_profile", args=[user.username]))
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Public Member")
+		self.assertContains(response, "My Channel")
+		self.assertNotContains(response, "private@example.com")
+		self.assertNotContains(response, "081234567890")
+
+	def test_community_chat_allows_members_to_manage_only_their_messages(self):
+		chat_url = reverse("main:chat_messages")
+		anonymous_response = self.client.post(chat_url, {"body": "Guest message"})
+		self.assertEqual(anonymous_response.status_code, 403)
+
+		owner = get_user_model().objects.create_user(username="chat-owner", password="strongpass123")
+		other = get_user_model().objects.create_user(username="chat-other", password="strongpass123")
+		self.client.force_login(owner)
+		create_response = self.client.post(chat_url, {"body": "Hello members"})
+		self.assertEqual(create_response.status_code, 201)
+		message_id = create_response.json()["id"]
+
+		self.client.force_login(other)
+		forbidden_response = self.client.post(
+			reverse("main:chat_message_action", args=[message_id]),
+			{"action": "delete"},
+		)
+		self.assertEqual(forbidden_response.status_code, 403)
+		self.assertTrue(ChatMessage.objects.filter(pk=message_id).exists())
+
+		self.client.force_login(owner)
+		edit_response = self.client.post(
+			reverse("main:chat_message_action", args=[message_id]),
+			{"action": "edit", "body": "Edited message"},
+		)
+		self.assertEqual(edit_response.status_code, 200)
+		self.assertEqual(edit_response.json()["body"], "Edited message")
+		delete_response = self.client.post(
+			reverse("main:chat_message_action", args=[message_id]),
+			{"action": "delete"},
+		)
+		self.assertEqual(delete_response.status_code, 200)
+		self.assertFalse(ChatMessage.objects.filter(pk=message_id).exists())
+
+	def test_project_comments_allow_members_to_manage_only_their_comments(self):
+		project = PortfolioItem.objects.create(title="Commented Project", description="Details")
+		comments_url = reverse("main:project_comments", args=[project.pk])
+		owner = get_user_model().objects.create_user(username="comment-owner", password="strongpass123")
+		other = get_user_model().objects.create_user(username="comment-other", password="strongpass123")
+
+		self.client.force_login(owner)
+		create_response = self.client.post(comments_url, {"body": "Useful project"})
+		self.assertEqual(create_response.status_code, 201)
+		comment_id = create_response.json()["id"]
+
+		self.client.force_login(other)
+		forbidden_response = self.client.post(
+			reverse("main:project_comment_action", args=[comment_id]),
+			{"action": "edit", "body": "Changed by someone else"},
+		)
+		self.assertEqual(forbidden_response.status_code, 403)
+		self.assertEqual(ProjectComment.objects.get(pk=comment_id).body, "Useful project")
+
+		self.client.force_login(owner)
+		delete_response = self.client.post(
+			reverse("main:project_comment_action", args=[comment_id]),
+			{"action": "delete"},
+		)
+		self.assertEqual(delete_response.status_code, 200)
+		self.assertFalse(ProjectComment.objects.filter(pk=comment_id).exists())
 
 	def test_nonexistent_page_returns_404(self):
 		response = self.client.get("/halaman-yang-tidak-ada/")

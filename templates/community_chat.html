@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Community Chat - {{ name }}{% endblock %}
+
+{% block content %}
+<section class="community-chat-section">
+    <div class="container community-chat-container">
+        <header class="community-chat-heading">
+            <p class="section-kicker">Member space</p>
+            <h1>Community Chat</h1>
+            <p>Chat with other portfolio members. You can edit or delete your own messages.</p>
+        </header>
+
+        <div id="chat-error" class="form-error" role="alert" hidden></div>
+        <div id="chat-messages" class="chat-message-list" role="log" aria-live="polite" aria-relevant="additions text">
+            <p id="chat-loading" class="loading-state">Loading messages...</p>
+        </div>
+        <form id="chat-form" class="chat-compose-form">
+            {% csrf_token %}
+            <label for="chat-message-input">Message</label>
+            <textarea id="chat-message-input" name="body" rows="3" maxlength="2000" required placeholder="Write a message..."></textarea>
+            <button class="button" type="submit">Send Message</button>
+        </form>
+    </div>
+</section>
+<script>
+    window.communityChatConfig = {
+        listUrl: "{% url 'main:chat_messages' %}",
+        csrfToken: "{{ csrf_token }}",
+        currentUsername: "{{ request.user.username|escapejs }}",
+    };
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile.full_name|default:member.username }} - Member Profile{% endblock %}
+
+{% block content %}
+<section class="account-profile-section">
+    <div class="container public-member-container">
+        <div class="public-member-identity">
+            <div class="profile-picture-preview">
+                {% if profile.profile_image %}
+                <img src="{{ profile.profile_image.url }}" alt="Profile picture for {{ member.username }}">
+                {% else %}
+                <span aria-hidden="true">{{ member.username|first|upper }}</span>
+                {% endif %}
+            </div>
+            <p class="section-kicker">Community member</p>
+            <h1>{{ profile.full_name|default:member.username }}</h1>
+            <p class="member-handle">@{{ member.username }}</p>
+        </div>
+
+        {% if profile.bio %}
+        <section class="public-member-bio">
+            <h2>About</h2>
+            <p>{{ profile.bio|linebreaksbr }}</p>
+        </section>
+        {% endif %}
+
+        <section class="public-connections">
+            <h2>Connections</h2>
+            {% if connections %}
+            <ul class="connection-links">
+                {% for connection in connections %}
+                <li>
+                    <a href="{{ connection.url }}" target="_blank" rel="noopener noreferrer">
+                        <span>{{ connection.get_platform_display }}</span>
+                        <strong>{{ connection.label|default:connection.get_platform_display }}</strong>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="empty-state">No connections added yet.</p>
+            {% endif %}
+        </section>
+    </div>
+</section>
+{% endblock %}

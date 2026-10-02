@@ -1,21 +1,31 @@
 from functools import wraps
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
-from django.views.decorators.http import require_POST
+from django.utils.html import strip_tags
+from django.views.decorators.http import require_http_methods, require_POST
 
-from main.forms import PortfolioItemForm, ProjectForm
-from main.models import Experience, PortfolioItem
+from main.forms import (
+    AccountDetailsForm,
+    PortfolioItemForm,
+    ProjectForm,
+    RegistrationForm,
+    UserConnectionFormSet,
+    UserProfileForm,
+)
+from main.models import ChatMessage, Experience, PortfolioItem, ProjectComment, User, UserProfile
 
 
 EDITOR_REQUIRED_PERMISSIONS = (
@@ -264,7 +274,9 @@ def get_projects_json(request):
     selected_category = request.GET.get("category", "").strip()
     sort_mode = request.GET.get("sort", "position").strip()
 
-    projects = PortfolioItem.objects.prefetch_related("starred_by")
+    projects = PortfolioItem.objects.prefetch_related("starred_by", "comments__user").annotate(
+        comment_count=Count("comments", distinct=True),
+    )
 
     if title_query:
         projects = projects.filter(title__icontains=title_query)
@@ -296,11 +308,122 @@ def get_projects_json(request):
             "project_url": project.project_url,
             "project_image_url": project.project_image_url,
             "star_count": len(starred_users),
+            "comment_count": project.comment_count,
             "is_starred": is_starred,
             "starred_by_names": ", ".join(user.username for user in starred_users),
         })
 
     return JsonResponse(data, safe=False)
+
+
+def _discussion_payload(item, user):
+    return {
+        "id": item.id,
+        "username": item.user.username,
+        "body": item.body,
+        "created_at": timezone.localtime(item.created_at).strftime("%d %b %Y, %H:%M"),
+        "can_edit": user.is_authenticated and item.user_id == user.pk,
+        "url": reverse("main:chat_message_action", args=[item.id])
+        if isinstance(item, ChatMessage)
+        else reverse("main:project_comment_action", args=[item.id]),
+    }
+
+
+@login_required
+def community_chat(request):
+    return render(request, "community_chat.html", {
+        "name": "Nadhif Aydin Adinandra",
+    })
+
+
+@require_http_methods(["GET", "POST"])
+def chat_messages(request):
+    if request.method == "GET":
+        messages_list = ChatMessage.objects.select_related("user").order_by("-created_at")[:100]
+        return JsonResponse(
+            [_discussion_payload(item, request.user) for item in reversed(list(messages_list))],
+            safe=False,
+        )
+
+    if not request.user.is_authenticated:
+        return JsonResponse({"message": "Login untuk mengirim chat."}, status=403)
+
+    body = strip_tags(request.POST.get("body", "")).strip()
+    if not body:
+        return JsonResponse({"message": "Pesan tidak boleh kosong."}, status=400)
+    if len(body) > 2000:
+        return JsonResponse({"message": "Pesan maksimal 2000 karakter."}, status=400)
+
+    message = ChatMessage.objects.create(user=request.user, body=body)
+    return JsonResponse(_discussion_payload(message, request.user), status=201)
+
+
+@require_POST
+def chat_message_action(request, message_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"message": "Login diperlukan."}, status=403)
+    message = get_object_or_404(ChatMessage.objects.select_related("user"), pk=message_id)
+    if message.user_id != request.user.pk:
+        return JsonResponse({"message": "Kamu hanya dapat mengubah chat milikmu sendiri."}, status=403)
+
+    action = request.POST.get("action")
+    if action == "delete":
+        message.delete()
+        return JsonResponse({"status": "success", "message": "Pesan chat dihapus."})
+    if action == "edit":
+        body = strip_tags(request.POST.get("body", "")).strip()
+        if not body:
+            return JsonResponse({"message": "Pesan tidak boleh kosong."}, status=400)
+        if len(body) > 2000:
+            return JsonResponse({"message": "Pesan maksimal 2000 karakter."}, status=400)
+        message.body = body
+        message.save(update_fields=["body", "updated_at"])
+        return JsonResponse(_discussion_payload(message, request.user))
+    return JsonResponse({"message": "Aksi tidak valid."}, status=400)
+
+
+@require_http_methods(["GET", "POST"])
+def project_comments(request, project_id):
+    project = get_object_or_404(PortfolioItem, pk=project_id)
+    if request.method == "GET":
+        comments = project.comments.select_related("user").order_by("created_at")
+        return JsonResponse([_discussion_payload(item, request.user) for item in comments], safe=False)
+
+    if not request.user.is_authenticated:
+        return JsonResponse({"message": "Login untuk menulis komentar."}, status=403)
+    body = strip_tags(request.POST.get("body", "")).strip()
+    if not body:
+        return JsonResponse({"message": "Komentar tidak boleh kosong."}, status=400)
+    if len(body) > 2000:
+        return JsonResponse({"message": "Komentar maksimal 2000 karakter."}, status=400)
+
+    comment = ProjectComment.objects.create(project=project, user=request.user, body=body)
+    return JsonResponse(_discussion_payload(comment, request.user), status=201)
+
+
+@require_POST
+def project_comment_action(request, comment_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"message": "Login diperlukan."}, status=403)
+    comment = get_object_or_404(ProjectComment.objects.select_related("user"), pk=comment_id)
+    if comment.user_id != request.user.pk:
+        return JsonResponse({"message": "Kamu hanya dapat mengubah komentarmu sendiri."}, status=403)
+
+    action = request.POST.get("action")
+    if action == "delete":
+        project_id = str(comment.project_id)
+        comment.delete()
+        return JsonResponse({"status": "success", "message": "Komentar dihapus.", "project_id": project_id})
+    if action == "edit":
+        body = strip_tags(request.POST.get("body", "")).strip()
+        if not body:
+            return JsonResponse({"message": "Komentar tidak boleh kosong."}, status=400)
+        if len(body) > 2000:
+            return JsonResponse({"message": "Komentar maksimal 2000 karakter."}, status=400)
+        comment.body = body
+        comment.save(update_fields=["body", "updated_at"])
+        return JsonResponse(_discussion_payload(comment, request.user))
+    return JsonResponse({"message": "Aksi tidak valid."}, status=400)
 
 
 def get_projects_xml(request):
@@ -426,18 +549,74 @@ def delete_project(request, project_id):
 
 
 def register(request):
-    form = UserCreationForm(request.POST or None)
+    form = RegistrationForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
-        form.save()
+        user = form.save(commit=False)
+        user.email = form.cleaned_data["email"]
+        user.save()
+        profile, _ = UserProfile.objects.get_or_create(
+            user=user,
+            defaults={"full_name": form.cleaned_data["full_name"]},
+        )
+        profile.full_name = form.cleaned_data["full_name"]
+        profile.save(update_fields=["full_name"])
         messages.success(request, "Akun berhasil dibuat. Silakan login.")
         return redirect("main:login")
 
     context = {
         "name": "Nadhif Aydin Adinandra",
         "form": form,
+        "google_login_enabled": settings.GOOGLE_LOGIN_ENABLED,
     }
     return render(request, "register.html", context)
+
+
+@login_required
+def account_profile(request):
+    profile, _ = UserProfile.objects.get_or_create(
+        user=request.user,
+        defaults={
+            "full_name": request.user.get_full_name() or request.user.username,
+        },
+    )
+
+    if request.method == "POST":
+        account_form = AccountDetailsForm(request.POST, instance=request.user)
+        profile_form = UserProfileForm(request.POST, request.FILES, instance=profile)
+        connections_formset = UserConnectionFormSet(request.POST, instance=profile, prefix="connections")
+        if account_form.is_valid() and profile_form.is_valid() and connections_formset.is_valid():
+            account_form.save()
+            profile_form.save()
+            connections_formset.save()
+            messages.success(request, "Profile berhasil diperbarui.")
+            return redirect("main:account_profile")
+    else:
+        account_form = AccountDetailsForm(instance=request.user)
+        profile_form = UserProfileForm(instance=profile)
+        connections_formset = UserConnectionFormSet(instance=profile, prefix="connections")
+
+    return render(request, "account_profile.html", {
+        "name": "Nadhif Aydin Adinandra",
+        "account_form": account_form,
+        "profile_form": profile_form,
+        "connections_formset": connections_formset,
+        "profile": profile,
+    })
+
+
+def public_member_profile(request, username):
+    member = get_object_or_404(User, username=username)
+    profile, _ = UserProfile.objects.get_or_create(
+        user=member,
+        defaults={"full_name": member.get_full_name() or member.username},
+    )
+    return render(request, "public_member_profile.html", {
+        "name": "Nadhif Aydin Adinandra",
+        "member": member,
+        "profile": profile,
+        "connections": profile.connections.all(),
+    })
 
 
 def login_user(request):
@@ -457,6 +636,7 @@ def login_user(request):
     context = {
         "name": "Nadhif Aydin Adinandra",
         "form": form,
+        "google_login_enabled": settings.GOOGLE_LOGIN_ENABLED,
     }
     return render(request, "login.html", context)
 

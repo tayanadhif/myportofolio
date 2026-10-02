@@ -1,10 +1,92 @@
 import re
 
 from django import forms
-from django.forms import ModelForm, TextInput, Textarea, URLInput
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+from django.forms import ModelForm, TextInput, Textarea, URLInput, inlineformset_factory
 from django.utils.html import strip_tags
 
-from main.models import PortfolioItem, ProjectSubmission
+from main.models import PortfolioItem, ProjectSubmission, UserConnection, UserProfile
+
+
+class RegistrationForm(UserCreationForm):
+    full_name = forms.CharField(max_length=150, label="Full name")
+    email = forms.EmailField(label="Email")
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = ("username", "email")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.order_fields(("full_name", "username", "email", "password1", "password2"))
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip()
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("An account with this email already exists.")
+        return email
+
+
+class AccountDetailsForm(ModelForm):
+    class Meta:
+        model = User
+        fields = ("username", "email")
+        widgets = {
+            "email": forms.EmailInput(attrs={"autocomplete": "email"}),
+        }
+
+
+class UserProfileForm(ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ("profile_image", "full_name", "phone", "date_of_birth", "bio")
+        labels = {
+            "profile_image": "Profile picture",
+            "full_name": "Full name",
+            "phone": "Phone (optional)",
+            "date_of_birth": "Date of birth",
+            "bio": "Bio (optional)",
+        }
+        widgets = {
+            "date_of_birth": forms.DateInput(attrs={"type": "date"}),
+            "bio": Textarea(attrs={"rows": 4, "placeholder": "Tell us a little about yourself"}),
+        }
+
+    def clean_profile_image(self):
+        image = self.cleaned_data.get("profile_image")
+        if image and image.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("Profile picture must be 5 MB or smaller.")
+        return image
+
+    def clean_bio(self):
+        return strip_tags(self.cleaned_data.get("bio", ""))
+
+
+class UserConnectionForm(ModelForm):
+    class Meta:
+        model = UserConnection
+        fields = ("platform", "label", "url")
+        labels = {
+            "platform": "Platform",
+            "label": "Display name (optional)",
+            "url": "Profile link",
+        }
+        widgets = {
+            "label": TextInput(attrs={"placeholder": "e.g. Bang Toon"}),
+            "url": URLInput(attrs={"placeholder": "https://..."}),
+        }
+
+
+UserConnectionFormSet = inlineformset_factory(
+    UserProfile,
+    UserConnection,
+    form=UserConnectionForm,
+    extra=1,
+    can_delete=True,
+    max_num=20,
+    validate_max=True,
+)
 
 
 class PortfolioItemForm(ModelForm):

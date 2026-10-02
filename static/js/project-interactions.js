@@ -44,6 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const safeProjectId = escapeHtml(project.id || '');
         const safeCsrfToken = escapeHtml(window.projectAjaxConfig?.csrfToken || '');
         const safeStarCount = escapeHtml(project.star_count || 0);
+        const safeCommentCount = escapeHtml(project.comment_count || 0);
+        const commentsUrl = window.projectAjaxConfig?.commentsBaseUrl
+            ? window.projectAjaxConfig.commentsBaseUrl.replace('00000000-0000-0000-0000-000000000000', safeProjectId)
+            : '#';
         const image = project.project_image_url ? `<img src="${escapeHtml(project.project_image_url)}" alt="Gambar ${escapeHtml(project.title)}" class="project-image">` : '';
         const projectUrl = project.project_url ? `<a href="${escapeHtml(project.project_url)}" class="button">Lihat Project</a>` : '';
         const starLabel = project.is_starred ? '★ Unstar' : '☆ Star';
@@ -82,6 +86,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${actionButtons.join('')}
                 </div>
             </div>
+            <section class="project-comments" data-project-comments="true">
+                <button type="button" class="button button-secondary comment-toggle" data-toggle-comments="true" aria-expanded="false">
+                    Comments (${safeCommentCount})
+                </button>
+                <div class="project-comments-panel" data-comments-panel="true" data-comments-url="${commentsUrl}" hidden>
+                    <div class="discussion-list" data-discussion-list="true"></div>
+                    ${window.projectAjaxConfig?.canComment ? `
+                    <form class="discussion-compose-form" data-comment-form="true" action="${commentsUrl}">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${safeCsrfToken}">
+                        <label class="visually-hidden" for="comment-${safeProjectId}">Write a comment</label>
+                        <textarea id="comment-${safeProjectId}" name="body" rows="2" maxlength="2000" required placeholder="Write a comment..."></textarea>
+                        <button type="submit" class="button">Comment</button>
+                    </form>` : '<p><a href="/login/">Login</a> to comment.</p>'}
+                </div>
+            </section>
         `;
 
         return card;

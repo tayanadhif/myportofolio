@@ -36,6 +36,9 @@ Kelas : PBP E
 
 3. XSS (*Cross-Site Scripting*) adalah serangan ketika input berbahaya dari pengguna ditampilkan sebagai kode yang kemudian dijalankan oleh browser. Data yang ditampilkan melalui AJAX/JavaScript lebih rentan apabila nilai response dimasukkan menggunakan `innerHTML` tanpa escaping, karena JavaScript menyusun HTML secara langsung. Template Django secara default melakukan escaping pada nilai template, sedangkan JavaScript harus melakukannya secara eksplisit. Pada proyek ini, nilai dinamis di-escape menggunakan `escapeHtml` atau dimasukkan menggunakan `textContent`, dan input teks dibersihkan di server dengan `strip_tags` pada method `clean_<field>` di `ModelForm`.
 
+### Google Login (Opsional)
+
+Login/register Google memakai `django-allauth`. Buat OAuth Client ID tipe Web Application di Google Cloud Console, lalu daftarkan callback URL `http://127.0.0.1:8000/accounts/google/login/callback/` (tambahkan callback domain deployment jika digunakan). Isi `GOOGLE_OAUTH_CLIENT_ID` dan `GOOGLE_OAUTH_CLIENT_SECRET` di file environment lokal atau konfigurasi environment hosting. Tombol Google hanya tampil jika kedua nilai tersebut tersedia; jangan commit secret ke repository.
 
 ### AI Disclosure
 

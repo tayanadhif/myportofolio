@@ -98,10 +98,12 @@
         projectsEndpoint: "{% url 'main:get_projects_json' %}",
         canEdit: {{ user_can_edit|yesno:"true,false" }},
         canDelete: {{ user_can_delete|yesno:"true,false" }},
+        canComment: {{ user.is_authenticated|yesno:"true,false" }},
         createProjectEndpoint: "{% url 'main:create_project_ajax' %}",
         updateBaseUrl: "{% url 'main:update_project' '00000000-0000-0000-0000-000000000000' %}",
         deleteBaseUrl: "{% url 'main:delete_project' '00000000-0000-0000-0000-000000000000' %}",
         toggleStarBaseUrl: "{% url 'main:toggle_star' '00000000-0000-0000-0000-000000000000' %}",
+        commentsBaseUrl: "{% url 'main:project_comments' '00000000-0000-0000-0000-000000000000' %}",
         csrfToken: "{{ csrf_token }}",
     };
 </script>

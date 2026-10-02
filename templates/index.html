@@ -72,7 +72,7 @@
             {% for member in logged_in_members %}
             <div class="member-row">
                 <span class="member-status" aria-hidden="true"></span>
-                <strong>{{ member.username }}</strong>
+                <a class="member-profile-link" href="{% url 'main:public_member_profile' member.username %}">{{ member.username }}</a>
                 <span class="member-meta">
                     <time datetime="{{ member.last_login|date:'c' }}">Login {{ member.last_login|date:'d M Y, H:i' }}</time>
                     <time datetime="{{ member.date_joined|date:'c' }}">Terdaftar {{ member.date_joined|date:'d M Y, H:i' }}</time>

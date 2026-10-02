@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - {{ name }}{% endblock %}
+
+{% block content %}
+<section class="account-profile-section">
+    <div class="container account-profile-container">
+        <div class="account-profile-heading">
+            <p class="section-kicker">Your account</p>
+            <h1>My Profile</h1>
+            <p>Manage your public profile and account details.</p>
+        </div>
+
+        {% for message in messages %}
+        <p class="account-success-message">{{ message }}</p>
+        {% endfor %}
+
+        <form method="post" enctype="multipart/form-data" class="account-profile-form">
+            {% csrf_token %}
+            <div class="profile-picture-preview">
+                {% if profile.profile_image %}
+                <img src="{{ profile.profile_image.url }}" alt="Profile picture for {{ request.user.username }}">
+                {% else %}
+                <span aria-hidden="true">{{ request.user.username|first|upper }}</span>
+                {% endif %}
+            </div>
+
+            {% for field in profile_form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+            </div>
+            {% endfor %}
+
+            {% for field in account_form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+            </div>
+            {% endfor %}
+
+            <section class="connection-editor" aria-labelledby="connections-title">
+                <div class="connection-editor-heading">
+                    <h2 id="connections-title">Connections</h2>
+                    <p>Add links to your YouTube, Instagram, TikTok, Roblox, Spotify, and other profiles.</p>
+                </div>
+                {{ connections_formset.management_form }}
+                {% for connection_form in connections_formset %}
+                <div class="connection-form-row">
+                    {% for hidden in connection_form.hidden_fields %}{{ hidden }}{% endfor %}
+                    {% for field in connection_form.visible_fields %}
+                    <div class="form-group">
+                        {% if field.name != "DELETE" %}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{% endif %}
+                        {{ field }}
+                        {% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                {% for error in connections_formset.non_form_errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+            </section>
+
+            <button type="submit" class="button">Save Profile</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

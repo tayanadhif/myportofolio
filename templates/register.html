@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load socialaccount %}
 {% block meta %}
     <title>Register - {{ name }}</title>
 {% endblock meta %}
@@ -26,6 +27,13 @@
                     {% endfor %}
                     <button type="submit" class="button">Daftar</button>
                 </form>
+                <div class="social-auth-divider"><span>or</span></div>
+                {% if google_login_enabled %}
+                <a class="button google-login-button" href="{% provider_login_url 'google' %}">Sign up with Google</a>
+                {% else %}
+                <button class="button google-login-button" type="button" disabled>Sign up with Google</button>
+                <p class="google-login-note">Google sign-in needs OAuth credentials to be configured.</p>
+                {% endif %}
                 <p>Sudah punya akun? <a href="{% url 'main:login' %}">Login di sini</a>.</p>
             </div>
         </section>

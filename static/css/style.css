@@ -304,7 +304,8 @@ body.dark-mode .site-header {
     z-index: 1;
     width: 100%;
     aspect-ratio: 1 / 1;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center;
     border-radius: var(--radius);
     border: 3px solid var(--ink);
     box-shadow: 0 20px 40px var(--shadow);

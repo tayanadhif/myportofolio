@@ -18,11 +18,15 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('', include('main.urls')),
+    path('accounts/login/', RedirectView.as_view(pattern_name='main:login', permanent=False)),
+    path('accounts/signup/', RedirectView.as_view(pattern_name='main:signup', permanent=False)),
+    path('accounts/', include('allauth.urls')),
 ]
 
 if settings.DEBUG:

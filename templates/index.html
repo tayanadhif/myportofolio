@@ -67,6 +67,28 @@
             <p class="members-intro">A running list of accounts that have visited this portfolio.</p>
         </div>
 
+        <form method="get" action="{% url 'main:show_main' %}#members" class="member-filter-form">
+            <label>
+                Login date
+                <input type="date" name="last_login_date" value="{{ last_login_date_filter }}">
+            </label>
+            <label>
+                Registration date
+                <input type="date" name="date_joined_date" value="{{ date_joined_date_filter }}">
+            </label>
+            <label>
+                Show
+                <select name="limit">
+                    <option value="10" {% if member_limit == "10" %}selected{% endif %}>1-10</option>
+                    <option value="30" {% if member_limit == "30" %}selected{% endif %}>1-30</option>
+                    <option value="50" {% if member_limit == "50" %}selected{% endif %}>1-50</option>
+                </select>
+            </label>
+            <button type="submit" class="button">Filter</button>
+            <a class="button button-secondary" href="{% url 'main:show_main' %}#members">Reset</a>
+        </form>
+        <p class="members-result-count">Showing {{ logged_in_members|length }} of {{ total_matching_members }} matching members</p>
+
         {% if logged_in_members %}
         <div class="members-list">
             {% for member in logged_in_members %}
@@ -81,7 +103,7 @@
             {% endfor %}
         </div>
         {% else %}
-        <p class="empty-state">Belum ada member yang login.</p>
+        <p class="empty-state">Tidak ada member yang cocok dengan filter.</p>
         {% endif %}
     </div>
 </section>

@@ -16,6 +16,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from django.utils.html import strip_tags
 from django.views.decorators.http import require_http_methods, require_POST
 
@@ -64,6 +65,21 @@ def show_main(request):
     if not last_login:
         last_login = "Belum ada sesi login / Cookie tidak ditemukan"
 
+    last_login_date = request.GET.get("last_login_date", "").strip()
+    date_joined_date = request.GET.get("date_joined_date", "").strip()
+    member_limit = request.GET.get("limit", "10").strip()
+    if member_limit not in {"10", "30", "50"}:
+        member_limit = "10"
+
+    members = User.objects.exclude(last_login__isnull=True).order_by("-last_login")
+    parsed_last_login_date = parse_date(last_login_date) if last_login_date else None
+    parsed_date_joined_date = parse_date(date_joined_date) if date_joined_date else None
+    if parsed_last_login_date:
+        members = members.filter(last_login__date=parsed_last_login_date)
+    if parsed_date_joined_date:
+        members = members.filter(date_joined__date=parsed_date_joined_date)
+    total_matching_members = members.count()
+
     context = {
         "name": "Nadhif Aydin Adinandra",
         "npm": "2506537745",
@@ -72,7 +88,11 @@ def show_main(request):
             "Computer Science student at Universitas Indonesia interested in programming, mathematics, and game development. Outside of academics, I also create gaming content on YouTube, sharing gameplay, longplays, and other gaming projects. Feel free to check out my channel and see what I do beyond Fasilkom. I also enjoy exploring new technologies and staying up-to-date with the latest trends in the tech world. My passion for learning drives me to continuously improve my skills and contribute to exciting projects."
         ),
         "last_login": last_login,
-        "logged_in_members": User.objects.exclude(last_login__isnull=True).order_by("-last_login"),
+        "logged_in_members": members[:int(member_limit)],
+        "last_login_date_filter": last_login_date if parsed_last_login_date else "",
+        "date_joined_date_filter": date_joined_date if parsed_date_joined_date else "",
+        "member_limit": member_limit,
+        "total_matching_members": total_matching_members,
     }
 
     return render(request, "index.html", context)

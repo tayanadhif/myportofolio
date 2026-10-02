@@ -1757,11 +1757,6 @@ body.dark-mode::after {
     background: #3367d6;
 }
 
-.google-login-button:disabled {
-    opacity: 0.62;
-    cursor: not-allowed;
-}
-
 .google-login-note {
     max-width: 640px;
     margin: -0.5rem 0 1rem;
@@ -1934,6 +1929,16 @@ body.dark-mode::after {
     white-space: pre-wrap;
 }
 
+.discussion-reply-context {
+    margin: 0 0 0.5rem;
+    padding: 0.45rem 0.65rem;
+    color: var(--text-muted);
+    background: rgba(127, 127, 127, 0.1);
+    border-left: 2px solid var(--accent-dark);
+    font-size: 0.84rem;
+    overflow-wrap: anywhere;
+}
+
 .discussion-item-actions {
     display: flex;
     justify-content: flex-end;
@@ -1960,7 +1965,8 @@ body.dark-mode::after {
 }
 
 .discussion-compose-form,
-.discussion-edit-form {
+.discussion-edit-form,
+.discussion-reply-form {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -1969,7 +1975,8 @@ body.dark-mode::after {
 }
 
 .discussion-compose-form textarea,
-.discussion-edit-form textarea {
+.discussion-edit-form textarea,
+.discussion-reply-form textarea {
     width: 100%;
     min-height: 72px;
     padding: 0.7rem;
@@ -1978,6 +1985,11 @@ body.dark-mode::after {
     border: 1px solid var(--field-border);
     font: inherit;
     resize: vertical;
+}
+
+.discussion-reply-target {
+    color: var(--text-muted);
+    font-size: 0.82rem;
 }
 
 .discussion-empty {

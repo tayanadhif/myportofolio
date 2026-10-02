@@ -1,6 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
     const csrfToken = window.projectAjaxConfig?.csrfToken || window.communityChatConfig?.csrfToken || '';
 
+    document.addEventListener('click', (event) => {
+        const pendingGoogleButton = event.target.closest('[data-google-login-pending]');
+        if (!pendingGoogleButton) return;
+        if (window.showToast) {
+            window.showToast(
+                'Google sign-in is not configured',
+                'Set GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET in the server environment first.',
+                'error',
+                6000,
+            );
+        }
+    });
+
     const showFailure = (message) => {
         if (window.showToast) {
             window.showToast('Gagal', message, 'error');
@@ -31,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return payload;
     };
 
-    const createDiscussionItem = (item, refresh) => {
+    const createDiscussionItem = (item, refresh, collectionUrl, canReply) => {
         const row = document.createElement('article');
         row.className = 'discussion-item';
 
@@ -47,23 +60,42 @@ document.addEventListener('DOMContentLoaded', () => {
         const body = document.createElement('p');
         body.className = 'discussion-item-body';
         body.textContent = item.body;
-        row.append(heading, body);
+        if (item.reply_to) {
+            const replyContext = document.createElement('p');
+            replyContext.className = 'discussion-reply-context';
+            replyContext.textContent = `Reply to @${item.reply_to.username}: ${item.reply_to.body}`;
+            row.append(heading, replyContext, body);
+        } else {
+            row.append(heading, body);
+        }
 
-        if (item.can_edit) {
+        if (item.can_edit || canReply) {
             const actions = document.createElement('div');
             actions.className = 'discussion-item-actions';
-            const editButton = document.createElement('button');
-            editButton.type = 'button';
-            editButton.className = 'discussion-action-button';
-            editButton.textContent = 'Edit';
-            const deleteButton = document.createElement('button');
-            deleteButton.type = 'button';
-            deleteButton.className = 'discussion-action-button discussion-action-danger';
-            deleteButton.textContent = 'Delete';
-            actions.append(editButton, deleteButton);
+            let editButton;
+            let deleteButton;
+            if (item.can_edit) {
+                editButton = document.createElement('button');
+                editButton.type = 'button';
+                editButton.className = 'discussion-action-button';
+                editButton.textContent = 'Edit';
+                deleteButton = document.createElement('button');
+                deleteButton.type = 'button';
+                deleteButton.className = 'discussion-action-button discussion-action-danger';
+                deleteButton.textContent = 'Delete';
+                actions.append(editButton, deleteButton);
+            }
+            let replyButton;
+            if (canReply) {
+                replyButton = document.createElement('button');
+                replyButton.type = 'button';
+                replyButton.className = 'discussion-action-button';
+                replyButton.textContent = 'Reply';
+                actions.appendChild(replyButton);
+            }
             row.appendChild(actions);
 
-            editButton.addEventListener('click', () => {
+            editButton?.addEventListener('click', () => {
                 const editor = document.createElement('form');
                 editor.className = 'discussion-edit-form';
                 const input = document.createElement('textarea');
@@ -95,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-            deleteButton.addEventListener('click', async () => {
+            deleteButton?.addEventListener('click', async () => {
                 if (!window.confirm('Delete your message?')) return;
                 try {
                     await sendForm(item.url, { action: 'delete' });
@@ -105,11 +137,47 @@ document.addEventListener('DOMContentLoaded', () => {
                     showFailure(error.message);
                 }
             });
+
+            replyButton?.addEventListener('click', () => {
+                const replyForm = document.createElement('form');
+                replyForm.className = 'discussion-reply-form';
+                const target = document.createElement('p');
+                target.className = 'discussion-reply-target';
+                target.textContent = `Replying to @${item.username}`;
+                const input = document.createElement('textarea');
+                input.maxLength = 2000;
+                input.required = true;
+                input.placeholder = 'Write a reply...';
+                const submit = document.createElement('button');
+                submit.type = 'submit';
+                submit.className = 'button';
+                submit.textContent = 'Send Reply';
+                const cancel = document.createElement('button');
+                cancel.type = 'button';
+                cancel.className = 'button button-secondary';
+                cancel.textContent = 'Cancel';
+                replyForm.append(target, input, submit, cancel);
+                row.appendChild(replyForm);
+                replyButton.disabled = true;
+                cancel.addEventListener('click', () => replyForm.remove());
+                replyForm.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    try {
+                        const result = await sendForm(collectionUrl, { body: input.value, reply_to: item.id });
+                        showSuccess(result.email_sent
+                            ? 'Reply sent; an email notification was queued.'
+                            : 'Reply saved, but its email notification could not be sent.');
+                        await refresh();
+                    } catch (error) {
+                        showFailure(error.message);
+                    }
+                });
+            });
         }
         return row;
     };
 
-    const renderDiscussion = (container, items, refresh) => {
+    const renderDiscussion = (container, items, refresh, collectionUrl, canReply) => {
         container.replaceChildren();
         if (!items.length) {
             const empty = document.createElement('p');
@@ -118,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
             container.appendChild(empty);
             return;
         }
-        items.forEach((item) => container.appendChild(createDiscussionItem(item, refresh)));
+        items.forEach((item) => container.appendChild(createDiscussionItem(item, refresh, collectionUrl, canReply)));
     };
 
     const loadComments = async (panel) => {
@@ -129,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Could not load comments.');
             const comments = await response.json();
             const refresh = () => loadComments(panel);
-            renderDiscussion(list, comments, refresh);
+            renderDiscussion(list, comments, refresh, panel.dataset.commentsUrl, Boolean(window.projectAjaxConfig?.canComment));
             if (toggle) toggle.textContent = `Comments (${comments.length})`;
         } catch (error) {
             list.textContent = error.message;
@@ -179,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const snapshot = JSON.stringify(messages);
             if (snapshot !== lastChatSnapshot) {
                 lastChatSnapshot = snapshot;
-                renderDiscussion(chatList, messages, refreshChat);
+                renderDiscussion(chatList, messages, refreshChat, chatUrl, true);
                 const scrollParent = chatList;
                 scrollParent.scrollTop = scrollParent.scrollHeight;
             }

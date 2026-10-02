@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
-from django.test import TestCase
+from django.core import mail
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -106,6 +107,17 @@ class MainTest(TestCase):
 		self.assertNotContains(response, "private@example.com")
 		self.assertNotContains(response, "081234567890")
 
+	def test_missing_profile_image_uses_initial_instead_of_broken_image(self):
+		user = get_user_model().objects.create_user(username="avatar-user", password="strongpass123")
+		user.profile.profile_image.name = "profiles/missing-avatar.jpg"
+		user.profile.save(update_fields=["profile_image"])
+		self.client.force_login(user)
+
+		response = self.client.get(reverse("main:account_profile"))
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, 'aria-hidden="true">A</span>')
+		self.assertNotContains(response, "/media/profiles/missing-avatar.jpg")
+
 	def test_community_chat_allows_members_to_manage_only_their_messages(self):
 		chat_url = reverse("main:chat_messages")
 		anonymous_response = self.client.post(chat_url, {"body": "Guest message"})
@@ -139,6 +151,70 @@ class MainTest(TestCase):
 		)
 		self.assertEqual(delete_response.status_code, 200)
 		self.assertFalse(ChatMessage.objects.filter(pk=message_id).exists())
+
+	@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+	def test_chat_reply_sends_email_to_original_message_owner(self):
+		owner = get_user_model().objects.create_user(
+			username="reply-owner",
+			email="owner@example.com",
+			password="strongpass123",
+		)
+		replier = get_user_model().objects.create_user(
+			username="reply-member",
+			email="replier@example.com",
+			password="strongpass123",
+		)
+		self.client.force_login(owner)
+		parent_response = self.client.post(reverse("main:chat_messages"), {"body": "Original chat"})
+		parent_id = parent_response.json()["id"]
+
+		self.client.force_login(replier)
+		reply_response = self.client.post(
+			reverse("main:chat_messages"),
+			{"body": "A reply", "reply_to": parent_id},
+		)
+		self.assertEqual(reply_response.status_code, 201)
+		self.assertEqual(reply_response.json()["reply_to"]["username"], owner.username)
+		self.assertTrue(reply_response.json()["email_sent"])
+		self.assertEqual(len(mail.outbox), 1)
+		self.assertEqual(mail.outbox[0].to, [owner.email])
+
+	@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+	def test_project_comment_reply_sends_email_and_rejects_cross_project_parent(self):
+		owner = get_user_model().objects.create_user(
+			username="comment-reply-owner",
+			email="comment-owner@example.com",
+			password="strongpass123",
+		)
+		replier = get_user_model().objects.create_user(
+			username="comment-reply-member",
+			email="comment-replier@example.com",
+			password="strongpass123",
+		)
+		project = PortfolioItem.objects.create(title="Reply Project", description="Project")
+		other_project = PortfolioItem.objects.create(title="Other Project", description="Other")
+		self.client.force_login(owner)
+		parent_response = self.client.post(
+			reverse("main:project_comments", args=[project.pk]),
+			{"body": "Original comment"},
+		)
+		parent_id = parent_response.json()["id"]
+
+		self.client.force_login(replier)
+		wrong_project_response = self.client.post(
+			reverse("main:project_comments", args=[other_project.pk]),
+			{"body": "Cross-project reply", "reply_to": parent_id},
+		)
+		self.assertEqual(wrong_project_response.status_code, 400)
+		self.assertEqual(len(mail.outbox), 0)
+
+		reply_response = self.client.post(
+			reverse("main:project_comments", args=[project.pk]),
+			{"body": "A comment reply", "reply_to": parent_id},
+		)
+		self.assertEqual(reply_response.status_code, 201)
+		self.assertTrue(reply_response.json()["email_sent"])
+		self.assertEqual(mail.outbox[0].to, [owner.email])
 
 	def test_project_comments_allow_members_to_manage_only_their_comments(self):
 		project = PortfolioItem.objects.create(title="Commented Project", description="Details")

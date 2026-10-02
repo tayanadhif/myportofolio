@@ -103,6 +103,7 @@ class UserConnection(models.Model):
 class ChatMessage(models.Model):
     id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chat_messages")
+    reply_to = models.ForeignKey("self", blank=True, null=True, on_delete=models.SET_NULL, related_name="replies")
     body = models.CharField(max_length=2000)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -115,6 +116,7 @@ class ProjectComment(models.Model):
     id = models.BigAutoField(primary_key=True)
     project = models.ForeignKey(PortfolioItem, on_delete=models.CASCADE, related_name="comments")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="project_comments")
+    reply_to = models.ForeignKey("self", blank=True, null=True, on_delete=models.SET_NULL, related_name="replies")
     body = models.CharField(max_length=2000)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

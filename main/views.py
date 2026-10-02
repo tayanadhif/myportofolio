@@ -1,4 +1,5 @@
 from functools import wraps
+import logging
 
 from django.conf import settings
 from django.contrib import messages
@@ -8,6 +9,7 @@ from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from django.core import serializers
+from django.core.mail import send_mail
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.http import HttpResponse, JsonResponse
@@ -25,7 +27,7 @@ from main.forms import (
     UserConnectionFormSet,
     UserProfileForm,
 )
-from main.models import ChatMessage, Experience, PortfolioItem, ProjectComment, User, UserProfile
+from main.models import ChatMessage, Experience, PortfolioItem, ProjectComment, UserProfile
 
 
 EDITOR_REQUIRED_PERMISSIONS = (
@@ -33,6 +35,8 @@ EDITOR_REQUIRED_PERMISSIONS = (
     "main.change_portfolioitem",
     "main.delete_portfolioitem",
 )
+
+logger = logging.getLogger(__name__)
 
 
 def user_has_editor_access(user):
@@ -321,12 +325,40 @@ def _discussion_payload(item, user):
         "id": item.id,
         "username": item.user.username,
         "body": item.body,
+        "reply_to": {
+            "username": item.reply_to.user.username,
+            "body": item.reply_to.body,
+        } if item.reply_to_id else None,
         "created_at": timezone.localtime(item.created_at).strftime("%d %b %Y, %H:%M"),
         "can_edit": user.is_authenticated and item.user_id == user.pk,
         "url": reverse("main:chat_message_action", args=[item.id])
         if isinstance(item, ChatMessage)
         else reverse("main:project_comment_action", args=[item.id]),
     }
+
+
+def _send_reply_notification(request, reply, subject, destination):
+    parent = reply.reply_to
+    if not parent or parent.user_id == reply.user_id or not parent.user.email:
+        return False
+
+    try:
+        sent = send_mail(
+            subject=subject,
+            message=(
+                f"Hi {parent.user.username},\n\n"
+                f"{reply.user.username} replied to your {subject.lower()}:\n\n"
+                f"{reply.body}\n\n"
+                f"Open the conversation: {request.build_absolute_uri(destination)}\n"
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[parent.user.email],
+            fail_silently=False,
+        )
+        return sent == 1
+    except Exception:
+        logger.exception("Could not send reply notification email")
+        return False
 
 
 @login_required
@@ -354,8 +386,20 @@ def chat_messages(request):
     if len(body) > 2000:
         return JsonResponse({"message": "Pesan maksimal 2000 karakter."}, status=400)
 
-    message = ChatMessage.objects.create(user=request.user, body=body)
-    return JsonResponse(_discussion_payload(message, request.user), status=201)
+    reply_to = None
+    reply_to_id = request.POST.get("reply_to", "").strip()
+    if reply_to_id:
+        reply_to = get_object_or_404(ChatMessage, pk=reply_to_id)
+
+    message = ChatMessage.objects.create(user=request.user, body=body, reply_to=reply_to)
+    payload = _discussion_payload(message, request.user)
+    payload["email_sent"] = _send_reply_notification(
+        request,
+        message,
+        "Community chat reply",
+        reverse("main:community_chat"),
+    ) if reply_to else False
+    return JsonResponse(payload, status=201)
 
 
 @require_POST
@@ -397,8 +441,22 @@ def project_comments(request, project_id):
     if len(body) > 2000:
         return JsonResponse({"message": "Komentar maksimal 2000 karakter."}, status=400)
 
-    comment = ProjectComment.objects.create(project=project, user=request.user, body=body)
-    return JsonResponse(_discussion_payload(comment, request.user), status=201)
+    reply_to = None
+    reply_to_id = request.POST.get("reply_to", "").strip()
+    if reply_to_id:
+        reply_to = get_object_or_404(ProjectComment, pk=reply_to_id)
+        if reply_to.project_id != project.pk:
+            return JsonResponse({"message": "Balasan harus berada di project yang sama."}, status=400)
+
+    comment = ProjectComment.objects.create(project=project, user=request.user, body=body, reply_to=reply_to)
+    payload = _discussion_payload(comment, request.user)
+    payload["email_sent"] = _send_reply_notification(
+        request,
+        comment,
+        "Project comment reply",
+        reverse("main:show_projects"),
+    ) if reply_to else False
+    return JsonResponse(payload, status=201)
 
 
 @require_POST
@@ -596,12 +654,17 @@ def account_profile(request):
         profile_form = UserProfileForm(instance=profile)
         connections_formset = UserConnectionFormSet(instance=profile, prefix="connections")
 
+    profile_image_url = None
+    if profile.profile_image and profile.profile_image.storage.exists(profile.profile_image.name):
+        profile_image_url = profile.profile_image.url
+
     return render(request, "account_profile.html", {
         "name": "Nadhif Aydin Adinandra",
         "account_form": account_form,
         "profile_form": profile_form,
         "connections_formset": connections_formset,
         "profile": profile,
+        "profile_image_url": profile_image_url,
     })
 
 
@@ -615,6 +678,9 @@ def public_member_profile(request, username):
         "name": "Nadhif Aydin Adinandra",
         "member": member,
         "profile": profile,
+        "profile_image_url": profile.profile_image.url
+        if profile.profile_image and profile.profile_image.storage.exists(profile.profile_image.name)
+        else None,
         "connections": profile.connections.all(),
     })
 

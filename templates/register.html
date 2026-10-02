@@ -31,7 +31,7 @@
                 {% if google_login_enabled %}
                 <a class="button google-login-button" href="{% provider_login_url 'google' %}">Sign up with Google</a>
                 {% else %}
-                <button class="button google-login-button" type="button" disabled>Sign up with Google</button>
+                <button class="button google-login-button" type="button" data-google-login-pending="true">Sign up with Google</button>
                 <p class="google-login-note">Google sign-in needs OAuth credentials to be configured.</p>
                 {% endif %}
                 <p>Sudah punya akun? <a href="{% url 'main:login' %}">Login di sini</a>.</p>

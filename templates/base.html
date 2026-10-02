@@ -8,11 +8,12 @@
 
     <title>{% block title %}{{ name }} - Portfolio{% endblock %}</title>
 
+    <link rel="icon" type="image/png" href="{% static 'img/bang-toon.png' %}?v=20261002-favicon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261001-theme3">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261002-replies">
 
     {% block meta %}
     {% endblock %}
@@ -66,7 +67,7 @@
     <script src="{% static 'js/theme.js' %}"></script>
     <script src="{% static 'js/password-visibility.js' %}"></script>
     <script src="{% static 'js/project-interactions.js' %}?v=20261002-discussions"></script>
-    <script src="{% static 'js/community-interactions.js' %}?v=20261002-discussions"></script>
+    <script src="{% static 'js/community-interactions.js' %}?v=20261002-replies-google"></script>
     <script src="{% static 'js/portfolio-interactions.js' %}"></script>
 
     {% block extra_scripts %}

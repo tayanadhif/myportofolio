@@ -7,8 +7,8 @@
     <div class="container public-member-container">
         <div class="public-member-identity">
             <div class="profile-picture-preview">
-                {% if profile.profile_image %}
-                <img src="{{ profile.profile_image.url }}" alt="Profile picture for {{ member.username }}">
+                {% if profile_image_url %}
+                <img src="{{ profile_image_url }}" alt="Profile picture for {{ member.username }}">
                 {% else %}
                 <span aria-hidden="true">{{ member.username|first|upper }}</span>
                 {% endif %}

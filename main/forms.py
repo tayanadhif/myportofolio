@@ -49,6 +49,7 @@ class UserProfileForm(ModelForm):
             "bio": "Bio (optional)",
         }
         widgets = {
+            "profile_image": forms.FileInput(attrs={"accept": "image/*"}),
             "date_of_birth": forms.DateInput(attrs={"type": "date"}),
             "bio": Textarea(attrs={"rows": 4, "placeholder": "Tell us a little about yourself"}),
         }

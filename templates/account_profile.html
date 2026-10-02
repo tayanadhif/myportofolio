@@ -18,8 +18,8 @@
         <form method="post" enctype="multipart/form-data" class="account-profile-form">
             {% csrf_token %}
             <div class="profile-picture-preview">
-                {% if profile.profile_image %}
-                <img src="{{ profile.profile_image.url }}" alt="Profile picture for {{ request.user.username }}">
+                {% if profile_image_url %}
+                <img src="{{ profile_image_url }}" alt="Profile picture for {{ request.user.username }}">
                 {% else %}
                 <span aria-hidden="true">{{ request.user.username|first|upper }}</span>
                 {% endif %}
@@ -29,6 +29,7 @@
             <div class="form-group">
                 <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                 {{ field }}
+                {% if field.name == "profile_image" %}<p class="form-help">Choose an image up to 5 MB. Uploading a new image replaces your current one.</p>{% endif %}
                 {% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
             </div>
             {% endfor %}

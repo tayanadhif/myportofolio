@@ -1,40 +1,80 @@
 {% extends "base.html" %}
 {% load socialaccount %}
+
 {% block meta %}
     <title>Login - {{ name }}</title>
 {% endblock meta %}
+
 {% block content %}
     <main>
         <section class="experience-section">
             <div class="container">
                 <h1>Login</h1>
+
                 {% for message in messages %}
                     <p class="form-message">{{ message }}</p>
                 {% endfor %}
+
                 <form method="post" action="{% url 'main:login' %}" class="project-form">
                     {% csrf_token %}
+
                     {% for field in form %}
                         <div class="form-group">
-                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            <label for="{{ field.id_for_label }}">
+                                {{ field.label }}
+                            </label>
+
                             {{ field }}
+
                             {% for error in field.errors %}
                                 <p class="form-error">{{ error }}</p>
                             {% endfor %}
                         </div>
                     {% endfor %}
+
                     {% for error in form.non_field_errors %}
                         <p class="form-error">{{ error }}</p>
                     {% endfor %}
-                    <button type="submit" class="button">Login</button>
+
+                    <button type="submit" class="button">
+                        Login
+                    </button>
                 </form>
-                <div class="social-auth-divider"><span>or</span></div>
+
+                <div class="social-auth-divider">
+                    <span>or</span>
+                </div>
+
                 {% if google_login_enabled %}
-                <a class="button google-login-button" href="{% provider_login_url 'google' %}">Continue with Google</a>
+
+                <form method="post" action="{% provider_login_url 'google' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="button google-login-button">
+                        Continue with Google
+                    </button>
+                </form>
+
                 {% else %}
-                <button class="button google-login-button" type="button" data-google-login-pending="true">Continue with Google</button>
-                <p class="google-login-note">Google sign-in needs OAuth credentials to be configured.</p>
+
+                <button
+                    class="button google-login-button"
+                    type="button"
+                    data-google-login-pending="true">
+                    Continue with Google
+                </button>
+
+                <p class="google-login-note">
+                    Google sign-in needs OAuth credentials to be configured.
+                </p>
+
                 {% endif %}
-                <p>Belum punya akun? <a href="{% url 'main:register' %}">Daftar di sini</a>.</p>
+
+                <p>
+                    Belum punya akun?
+                    <a href="{% url 'main:register' %}">
+                        Daftar di sini
+                    </a>.
+                </p>
             </div>
         </section>
     </main>

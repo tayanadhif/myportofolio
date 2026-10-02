@@ -2152,49 +2152,153 @@ body.dark-mode::after {
 }
 
 .members-section {
-    padding: 4rem 0;
+    position: relative;
+    padding: 5rem 0 6rem;
+    border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
 }
 
 .members-heading {
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    max-width: 900px;
+}
+
+.members-heading .section-kicker {
+    display: inline-block;
+    margin-bottom: 0.75rem;
 }
 
 .members-heading h2 {
-    max-width: 620px;
-    font-size: clamp(2.4rem, 5vw, 4.4rem);
-    line-height: 0.95;
+    max-width: 760px;
+    margin: 0;
+    font-size: clamp(3.2rem, 8vw, 6.5rem);
+    line-height: 0.85;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
+    color: var(--text);
+    text-shadow: 5px 5px 0 rgba(255, 71, 61, 0.16);
 }
 
 .members-intro {
-    max-width: 520px;
+    max-width: 600px;
+    margin-top: 1.2rem;
     color: var(--text-muted);
-    margin-top: 0.8rem;
+    font-size: 1rem;
+}
+
+.member-filter-form {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    margin: 2rem 0 1.25rem;
+    padding: 1rem;
+    background: rgba(10, 12, 16, 0.72);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent);
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(8px);
+}
+
+.member-filter-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.member-filter-form select {
+    min-width: 220px;
+    min-height: 42px;
+    padding: 0.55rem 2rem 0.55rem 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--field-bg);
+    color: var(--field-text);
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.member-filter-form select:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+}
+
+.member-filter-form label:nth-child(2) select {
+    min-width: 110px;
+}
+
+.member-filter-form .button {
+    min-height: 42px;
+    padding: 0.65rem 1.1rem;
+}
+
+.member-filter-form .button-secondary {
+    border-color: var(--line);
+    background: transparent;
+    color: var(--text);
+}
+
+.member-filter-form .button-secondary:hover {
+    background: var(--panel);
+    color: var(--accent-dark);
+}
+
+.members-summary {
+    margin-bottom: 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.members-summary strong {
+    color: var(--accent-dark);
 }
 
 .members-list {
-    max-width: 780px;
-    border-top: 1px solid var(--line);
+    width: 100%;
+    max-width: 900px;
+    border-top: 2px solid var(--accent);
+    background: rgba(10, 12, 16, 0.42);
 }
 
 .member-row {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: 12px minmax(180px, 1fr) auto;
     align-items: center;
-    gap: 0.8rem;
-    min-height: 58px;
+    gap: 1rem;
+    min-height: 78px;
+    padding: 0.9rem 1rem;
     border-bottom: 1px solid var(--line);
-    color: var(--text);
+    background: rgba(20, 23, 30, 0.72);
+    transition:
+        background-color 0.2s ease,
+        padding-left 0.2s ease,
+        border-color 0.2s ease;
 }
 
-.member-meta {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.15rem;
-    color: var(--text-muted);
-    font-size: 0.82rem;
+.member-row:hover {
+    padding-left: 1.25rem;
+    background: rgba(255, 71, 61, 0.07);
+    border-bottom-color: rgba(255, 71, 61, 0.35);
+}
+
+.member-row a {
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.member-row a:hover {
+    color: var(--accent-dark);
 }
 
 .member-status {
@@ -2202,17 +2306,101 @@ body.dark-mode::after {
     height: 9px;
     border-radius: 50%;
     background: var(--accent-dark);
-    box-shadow: 0 0 12px var(--accent-dark);
+    box-shadow:
+        0 0 0 3px rgba(255, 178, 26, 0.08),
+        0 0 14px rgba(255, 178, 26, 0.8);
+}
+
+.member-meta {
+    display: grid;
+    grid-template-columns: minmax(180px, auto) minmax(180px, auto);
+    gap: 0.35rem 1.5rem;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    text-align: right;
+}
+
+.member-meta span {
+    white-space: nowrap;
+}
+
+.member-meta span::first-letter {
+    color: var(--accent-dark);
+}
+
+body:not(.dark-mode) .member-filter-form {
+    background: rgba(255, 250, 241, 0.84);
+    box-shadow: 0 14px 35px rgba(67, 49, 32, 0.12);
+}
+
+body:not(.dark-mode) .members-list {
+    background: rgba(255, 250, 241, 0.38);
+}
+
+body:not(.dark-mode) .member-row {
+    background: rgba(255, 253, 248, 0.78);
+}
+
+body:not(.dark-mode) .member-row:hover {
+    background: rgba(201, 62, 54, 0.06);
+}
+
+body:not(.dark-mode) .member-filter-form select {
+    background: rgba(255, 253, 248, 0.96);
+    color: var(--text);
+    border-color: #c6b8a6;
+}
+
+@media (max-width: 700px) {
+    .members-section {
+        padding: 4rem 0 5rem;
+    }
+
+    .members-heading h2 {
+        font-size: clamp(3rem, 15vw, 5rem);
+    }
+
+    .member-filter-form {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .member-filter-form label,
+    .member-filter-form select,
+    .member-filter-form .button {
+        width: 100%;
+    }
+
+    .member-filter-form select {
+        min-width: 0;
+    }
+
+    .member-meta {
+        grid-template-columns: 1fr;
+        gap: 0.15rem;
+        justify-items: start;
+        text-align: left;
+    }
 }
 
 @media (max-width: 560px) {
     .member-row {
-        grid-template-columns: auto 1fr;
-        padding: 0.8rem 0;
+        grid-template-columns: 9px 1fr;
+        gap: 0.8rem;
+        padding: 1rem 0.8rem;
+    }
+
+    .member-row:hover {
+        padding-left: 1rem;
     }
 
     .member-meta {
         grid-column: 2;
-        align-items: flex-start;
+        width: 100%;
+    }
+
+    .member-meta span {
+        white-space: normal;
     }
 }

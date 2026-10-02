@@ -2430,7 +2430,10 @@ body:not(.dark-mode) .member-filter-form select {
 
 .auth-card form {
     margin-top: 2rem;
-    text-align: left;
+}
+
+.auth-card .google-form {
+    text-align: center;
 }
 
 .auth-card form p {

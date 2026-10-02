@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block meta %}
+    <title>Sign In Via Google - {{ name }}</title>
+{% endblock meta %}
+
+{% block content %}
+<main>
+    <section class="experience-section">
+        <div class="container">
+            <div class="auth-card">
+                <p class="section-kicker">Google Sign In</p>
+
+                <h1>Sign In Via Google</h1>
+
+                <p>
+                    You are about to sign in using your Google account.
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <button type="submit" class="button">
+                        Continue with Google
+                    </button>
+                </form>
+
+                <p class="auth-link">
+                    <a href="{% url 'main:show_main' %}">
+                        Back to portfolio
+                    </a>
+                </p>
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock content %}

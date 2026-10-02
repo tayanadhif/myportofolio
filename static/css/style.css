@@ -1672,8 +1672,8 @@ body.dark-mode::after {
 .profile-picture-preview {
     display: grid;
     place-items: center;
-    width: 112px;
-    height: 112px;
+    width: 140px;
+    height: 140px;
     margin-bottom: 1.5rem;
     overflow: hidden;
     color: var(--button-text);
@@ -1682,12 +1682,15 @@ body.dark-mode::after {
     border-radius: 50%;
     font-family: "Bebas Neue", sans-serif;
     font-size: 3rem;
+    flex-shrink: 0;
 }
 
 .profile-picture-preview img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
+    display: block;
 }
 
 .account-success-message {

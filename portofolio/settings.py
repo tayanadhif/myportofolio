@@ -18,14 +18,10 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Use the production file when PRODUCTION is supplied by the hosting platform.
-environment_file = (
-    BASE_DIR / '.env.prod'
-    if os.getenv('PRODUCTION', '').lower() == 'true'
-    else BASE_DIR / '.env'
-)
-load_dotenv(environment_file)
-
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
+
+if not PRODUCTION:
+    load_dotenv(BASE_DIR / '.env')
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dev-key')

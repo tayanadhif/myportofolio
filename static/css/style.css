@@ -2410,9 +2410,10 @@ body:not(.dark-mode) .member-filter-form select {
 
 .auth-card {
     max-width: 560px;
-    margin: 0 auto;
+    margin: 4rem auto;
     padding: 2.5rem;
     text-align: center;
+
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 1rem;
@@ -2429,13 +2430,41 @@ body:not(.dark-mode) .member-filter-form select {
 
 .auth-card form {
     margin-top: 2rem;
+    text-align: left;
+}
+
+.auth-card form p {
+    margin-bottom: 1rem;
+}
+
+.auth-card input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.auth-card button {
+    margin-top: 1rem;
 }
 
 .auth-link {
     margin-top: 1.5rem;
+    text-align: center;
 }
 
 .auth-link a {
     color: var(--accent);
     font-weight: 700;
+}
+
+.auth-card hr {
+    margin: 2rem 0;
+    border: 0;
+    border-top: 1px solid var(--border);
+}
+
+.auth-error {
+    margin: 1rem 0;
+    padding: 1rem;
+    border: 1px solid var(--accent-dark);
+    border-radius: 0.75rem;
 }

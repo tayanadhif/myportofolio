@@ -113,6 +113,8 @@ if GOOGLE_LOGIN_ENABLED:
             'SCOPE': ['profile', 'email'],
             'AUTH_PARAMS': {'access_type': 'online'},
             'OAUTH_PKCE_ENABLED': True,
+            'EMAIL_AUTHENTICATION': True,
+            'EMAIL_AUTHENTICATION_AUTO_CONNECT': True,
         },
     }
 

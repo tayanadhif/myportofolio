@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block meta %}
+    <title>Sign In - {{ name }}</title>
+{% endblock meta %}
+
+{% block content %}
+<main>
+    <section class="experience-section">
+        <div class="container">
+            <div class="auth-card">
+                <p class="section-kicker">Welcome Back</p>
+
+                <h1>Sign In</h1>
+
+                <p>
+                    Sign in to your account to continue.
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    {{ form.as_p }}
+
+                    <button type="submit" class="button">
+                        Sign In
+                    </button>
+                </form>
+
+                <p class="auth-link">
+                    Don't have an account?
+                    <a href="{% url 'account_signup' %}">
+                        Sign Up
+                    </a>
+                </p>
+
+                <hr>
+
+                <p class="auth-link">
+                    Or use a third-party account
+                </p>
+
+                {% load socialaccount %}
+
+                <a
+                    href="{% provider_login_url 'google' %}"
+                    class="button"
+                >
+                    Continue with Google
+                </a>
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock content %}

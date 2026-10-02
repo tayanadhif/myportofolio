@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block meta %}
-    <title>Google Sign In - {{ name }}</title>
+    <title>Sign Up - {{ name }}</title>
 {% endblock meta %}
 
 {% block content %}
@@ -9,25 +9,28 @@
     <section class="experience-section">
         <div class="container">
             <div class="auth-card">
-                <p class="section-kicker">Google Sign In</p>
+                <p class="section-kicker">Join the Community</p>
 
-                <h1>Sign In Via Google</h1>
+                <h1>Sign Up</h1>
 
                 <p>
-                    You are about to sign in using your Google account.
+                    Create an account to join the community.
                 </p>
 
                 <form method="post">
                     {% csrf_token %}
 
+                    {{ form.as_p }}
+
                     <button type="submit" class="button">
-                        Continue with Google
+                        Sign Up
                     </button>
                 </form>
 
                 <p class="auth-link">
+                    Already have an account?
                     <a href="{% url 'account_login' %}">
-                        Back to Sign In
+                        Sign In
                     </a>
                 </p>
             </div>

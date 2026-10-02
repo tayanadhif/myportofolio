@@ -69,12 +69,28 @@
 
         <form method="get" action="{% url 'main:show_main' %}#members" class="member-filter-form">
             <label>
-                Login date
-                <input type="date" name="last_login_date" value="{{ last_login_date_filter }}">
-            </label>
-            <label>
-                Registration date
-                <input type="date" name="date_joined_date" value="{{ date_joined_date_filter }}">
+                Sort by
+                <select name="sort">
+                    <option value="last_login_desc"
+                        {% if sort_mode == "last_login_desc" %}selected{% endif %}>
+                        Login date — Descending
+                    </option>
+
+                    <option value="last_login_asc"
+                        {% if sort_mode == "last_login_asc" %}selected{% endif %}>
+                        Login date — Ascending
+                    </option>
+
+                    <option value="date_joined_desc"
+                        {% if sort_mode == "date_joined_desc" %}selected{% endif %}>
+                        Registration date — Descending
+                    </option>
+
+                    <option value="date_joined_asc"
+                        {% if sort_mode == "date_joined_asc" %}selected{% endif %}>
+                        Registration date — Ascending
+                    </option>
+                </select>
             </label>
             <label>
                 Show

@@ -65,19 +65,26 @@ def show_main(request):
     if not last_login:
         last_login = "Belum ada sesi login / Cookie tidak ditemukan"
 
-    last_login_date = request.GET.get("last_login_date", "").strip()
-    date_joined_date = request.GET.get("date_joined_date", "").strip()
+    sort_mode = request.GET.get("sort", "last_login_desc").strip()
     member_limit = request.GET.get("limit", "10").strip()
+
     if member_limit not in {"10", "30", "50"}:
         member_limit = "10"
 
-    members = User.objects.exclude(last_login__isnull=True).order_by("-last_login")
-    parsed_last_login_date = parse_date(last_login_date) if last_login_date else None
-    parsed_date_joined_date = parse_date(date_joined_date) if date_joined_date else None
-    if parsed_last_login_date:
-        members = members.filter(last_login__date=parsed_last_login_date)
-    if parsed_date_joined_date:
-        members = members.filter(date_joined__date=parsed_date_joined_date)
+    sort_options = {
+        "last_login_asc": "last_login",
+        "last_login_desc": "-last_login",
+        "date_joined_asc": "date_joined",
+        "date_joined_desc": "-date_joined",
+    }
+
+    if sort_mode not in sort_options:
+        sort_mode = "last_login_desc"
+
+    members = User.objects.exclude(
+        last_login__isnull=True
+    ).order_by(sort_options[sort_mode])
+
     total_matching_members = members.count()
 
     context = {
@@ -89,9 +96,8 @@ def show_main(request):
         ),
         "last_login": last_login,
         "logged_in_members": members[:int(member_limit)],
-        "last_login_date_filter": last_login_date if parsed_last_login_date else "",
-        "date_joined_date_filter": date_joined_date if parsed_date_joined_date else "",
         "member_limit": member_limit,
+        "sort_mode": sort_mode,
         "total_matching_members": total_matching_members,
     }
 

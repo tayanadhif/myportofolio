@@ -106,12 +106,10 @@ class UserConnectionForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Kalau database berisi platform custom,
-        # tampilkan sebagai "Other" + isi Platform name.
         if self.instance and self.instance.pk:
-            known_platforms = dict(UserConnection.PLATFORM_CHOICES)
+            choices = dict(UserConnection.PLATFORM_CHOICES)
 
-            if self.instance.platform not in known_platforms:
+            if self.instance.platform not in choices:
                 self.initial["platform"] = "other"
                 self.initial["custom_platform"] = self.instance.platform
 
@@ -119,7 +117,9 @@ class UserConnectionForm(ModelForm):
         cleaned_data = super().clean()
 
         platform = cleaned_data.get("platform")
-        custom_platform = cleaned_data.get("custom_platform", "").strip()
+        custom_platform = cleaned_data.get(
+            "custom_platform", ""
+        ).strip()
 
         if platform == "other" and not custom_platform:
             self.add_error(
@@ -135,10 +135,10 @@ class UserConnectionForm(ModelForm):
         instance = super().save(commit=False)
 
         platform = self.cleaned_data.get("platform")
-        custom_platform = self.cleaned_data.get("custom_platform", "").strip()
+        custom_platform = self.cleaned_data.get(
+            "custom_platform", ""
+        ).strip()
 
-        # JANGAN mengubah cleaned_data["platform"] menjadi "Discord".
-        # Simpan "Discord" langsung ke model setelah ChoiceField lolos validasi.
         if platform == "other" and custom_platform:
             instance.platform = custom_platform
 

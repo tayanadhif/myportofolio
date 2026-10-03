@@ -94,15 +94,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         const customPlatformGroup =
-            customPlatformField.closest(".custom-platform-field");
+            customPlatformField.closest(".form-group");
 
         function updateCustomPlatformVisibility() {
-            if (!customPlatformGroup) {
-                return;
-            }
-
             if (platformSelect.value === "other") {
-                customPlatformGroup.style.display = "block";
+                customPlatformGroup.style.display = "";
             } else {
                 customPlatformGroup.style.display = "none";
                 customPlatformField.value = "";
@@ -118,3 +114,5 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
+
+{% endblock %}

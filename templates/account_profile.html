@@ -50,29 +50,25 @@
                 {{ connections_formset.management_form }}
                 {% for connection_form in connections_formset %}
                 <div class="connection-form-row">
-                    {% for hidden in connection_form.hidden_fields %}{{ hidden }}{% endfor %}
-                    {% for field in connection_form.visible_fields %}
-                        {% if field.name == "DELETE" %}
-                            <div class="connection-delete">
-                                {{ field }}
-                                <label for="{{ field.id_for_label }}">
-                                    Delete this connection
-                                </label>
-                            </div>
-                            {% for error in field.errors %}
-                                <p class="form-error">{{ error }}</p>
-                            {% endfor %}
-                        {% else %}
-                            <div class="form-group">
-                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                                {{ field }}
+                    <div class="form-group custom-platform-field">
+                        <label for="{{ connection_form.custom_platform.id_for_label }}">
+                            {{ connection_form.custom_platform.label }}
+                        </label>
+                        {{ connection_form.custom_platform }}
 
-                                {% for error in field.errors %}
-                                    <p class="form-error">{{ error }}</p>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    {% endfor %}
+                        {% for error in connection_form.custom_platform.errors %}
+                            <p class="form-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    {% if connection_form.DELETE %}
+                        <div class="connection-delete">
+                            {{ connection_form.DELETE }}
+                            <label for="{{ connection_form.DELETE.id_for_label }}">
+                                Delete this connection
+                            </label>
+                        </div>
+                    {% endif %}
                 </div>
                 {% endfor %}
                 {% for error in connections_formset.non_form_errors %}<p class="form-error">{{ error }}</p>{% endfor %}
@@ -97,11 +93,16 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        const customPlatformGroup = customPlatformField.closest(".form-group");
+        const customPlatformGroup =
+            customPlatformField.closest(".custom-platform-field");
 
         function updateCustomPlatformVisibility() {
+            if (!customPlatformGroup) {
+                return;
+            }
+
             if (platformSelect.value === "other") {
-                customPlatformGroup.style.display = "";
+                customPlatformGroup.style.display = "block";
             } else {
                 customPlatformGroup.style.display = "none";
                 customPlatformField.value = "";
@@ -117,4 +118,3 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
-{% endblock %}

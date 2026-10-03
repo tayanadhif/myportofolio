@@ -1801,7 +1801,7 @@ body.dark-mode::after {
         minmax(140px, 0.7fr)
         minmax(150px, 0.9fr)
         minmax(280px, 1.8fr);
-    align-items: end;
+    align-items: start;
     gap: 0.8rem;
     margin: 1rem 0;
     padding: 1rem;
@@ -1814,12 +1814,30 @@ body.dark-mode::after {
     margin-bottom: 0;
 }
 
+.connection-platform-field {
+    grid-column: 1;
+}
+
+.connection-display-name-field {
+    grid-column: 2;
+}
+
+.connection-url-field {
+    grid-column: 3;
+}
+
+.custom-platform-field {
+    grid-column: 1 / -1;
+    display: none;
+    margin-top: 0.2rem !important;
+}
+
 .connection-delete {
     grid-column: 1 / -1;
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    margin-left: 0;
+    margin: 0;
     padding-top: 0.4rem;
     white-space: nowrap;
 }

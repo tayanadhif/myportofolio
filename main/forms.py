@@ -67,16 +67,18 @@ class UserProfileForm(ModelForm):
 class UserConnectionForm(ModelForm):
     platform = ChoiceField(
         choices=UserConnection.PLATFORM_CHOICES,
-        label="Platform"
+        label="Platform",
     )
 
     custom_platform = CharField(
         label="Platform name",
         required=False,
         max_length=50,
-        widget=TextInput(attrs={
-            "placeholder": "e.g. Discord"
-        })
+        widget=TextInput(
+            attrs={
+                "placeholder": "e.g. Discord",
+            }
+        ),
     )
 
     class Meta:
@@ -89,15 +91,23 @@ class UserConnectionForm(ModelForm):
             "url": "Profile link",
         }
         widgets = {
-            "label": TextInput(attrs={"placeholder": "e.g. Bang Toon"}),
-            "url": URLInput(attrs={"placeholder": "https://..."}),
+            "label": TextInput(
+                attrs={
+                    "placeholder": "e.g. Bang Toon",
+                }
+            ),
+            "url": URLInput(
+                attrs={
+                    "placeholder": "https://...",
+                }
+            ),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Kalau data lama menggunakan platform custom,
-        # tampilkan sebagai "Other".
+        # Kalau database berisi platform custom,
+        # tampilkan sebagai "Other" + isi Platform name.
         if self.instance and self.instance.pk:
             known_platforms = dict(UserConnection.PLATFORM_CHOICES)
 
@@ -111,16 +121,32 @@ class UserConnectionForm(ModelForm):
         platform = cleaned_data.get("platform")
         custom_platform = cleaned_data.get("custom_platform", "").strip()
 
-        if platform == "other":
-            if not custom_platform:
-                self.add_error(
-                    "custom_platform",
-                    "Please enter the platform name."
-                )
-            else:
-                cleaned_data["platform"] = custom_platform
+        if platform == "other" and not custom_platform:
+            self.add_error(
+                "custom_platform",
+                "Please enter the platform name.",
+            )
+
+        cleaned_data["custom_platform"] = custom_platform
 
         return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        platform = self.cleaned_data.get("platform")
+        custom_platform = self.cleaned_data.get("custom_platform", "").strip()
+
+        # JANGAN mengubah cleaned_data["platform"] menjadi "Discord".
+        # Simpan "Discord" langsung ke model setelah ChoiceField lolos validasi.
+        if platform == "other" and custom_platform:
+            instance.platform = custom_platform
+
+        if commit:
+            instance.save()
+            self.save_m2m()
+
+        return instance
 
 
 UserConnectionFormSet = inlineformset_factory(

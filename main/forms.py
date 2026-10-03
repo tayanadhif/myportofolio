@@ -67,8 +67,12 @@ class UserProfileForm(ModelForm):
 
 class UserConnectionForm(ModelForm):
     platform = ChoiceField(
-        choices=UserConnection.PLATFORM_CHOICES,
+        choices=[
+            ("", "None"),
+            *UserConnection.PLATFORM_CHOICES,
+        ],
         label="Platform",
+        required=False,
     )
 
     custom_platform = CharField(
@@ -82,9 +86,24 @@ class UserConnectionForm(ModelForm):
         ),
     )
 
+    url = URLInput(
+        label="Profile link",
+        required=False,
+        widget=URLInput(
+            attrs={
+                "placeholder": "https://...",
+            }
+        ),
+    )
+
     class Meta:
         model = UserConnection
-        fields = ("platform", "custom_platform", "label", "url")
+        fields = (
+            "platform",
+            "custom_platform",
+            "label",
+            "url",
+        )
 
         labels = {
             "platform": "Platform",
@@ -99,18 +118,11 @@ class UserConnectionForm(ModelForm):
                     "placeholder": "e.g. Bang Toon",
                 }
             ),
-            "url": URLInput(
-                attrs={
-                    "placeholder": "https://...",
-                }
-            ),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Kalau platform di database bukan salah satu
-        # pilihan bawaan, tampilkan sebagai "Other".
         if self.instance and self.instance.pk:
             known_platforms = dict(
                 UserConnection.PLATFORM_CHOICES
@@ -125,16 +137,28 @@ class UserConnectionForm(ModelForm):
     def clean(self):
         cleaned_data = super().clean()
 
-        platform = cleaned_data.get("platform")
+        platform = cleaned_data.get("platform") or ""
         custom_platform = cleaned_data.get(
             "custom_platform",
             "",
         ).strip()
+        url = cleaned_data.get("url")
+
+        label = cleaned_data.get("label") or ""
+
+        if not platform and not custom_platform and not url and not label:
+            return cleaned_data
 
         if platform == "other" and not custom_platform:
             self.add_error(
                 "custom_platform",
                 "Please enter the platform name.",
+            )
+
+        if platform and not url:
+            self.add_error(
+                "url",
+                "Please enter the profile link.",
             )
 
         cleaned_data["custom_platform"] = custom_platform
@@ -144,14 +168,13 @@ class UserConnectionForm(ModelForm):
     def save(self, commit=True):
         instance = super().save(commit=False)
 
-        platform = self.cleaned_data.get("platform")
+        platform = self.cleaned_data.get("platform") or ""
         custom_platform = self.cleaned_data.get(
             "custom_platform",
             "",
         ).strip()
 
-        # Kalau pilih Other, simpan nama custom
-        # langsung ke field platform.
+        # Kalau Other + nama custom
         if platform == "other" and custom_platform:
             instance.platform = custom_platform
 

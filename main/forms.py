@@ -85,12 +85,14 @@ class UserConnectionForm(ModelForm):
     class Meta:
         model = UserConnection
         fields = ("platform", "custom_platform", "label", "url")
+
         labels = {
             "platform": "Platform",
             "custom_platform": "Platform name",
             "label": "Display name",
             "url": "Profile link",
         }
+
         widgets = {
             "label": TextInput(
                 attrs={
@@ -107,19 +109,26 @@ class UserConnectionForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Kalau platform di database bukan salah satu
+        # pilihan bawaan, tampilkan sebagai "Other".
         if self.instance and self.instance.pk:
-            choices = dict(UserConnection.PLATFORM_CHOICES)
+            known_platforms = dict(
+                UserConnection.PLATFORM_CHOICES
+            )
 
-            if self.instance.platform not in choices:
+            if self.instance.platform not in known_platforms:
                 self.initial["platform"] = "other"
-                self.initial["custom_platform"] = self.instance.platform
+                self.initial["custom_platform"] = (
+                    self.instance.platform
+                )
 
     def clean(self):
         cleaned_data = super().clean()
 
         platform = cleaned_data.get("platform")
         custom_platform = cleaned_data.get(
-            "custom_platform", ""
+            "custom_platform",
+            "",
         ).strip()
 
         if platform == "other" and not custom_platform:
@@ -137,9 +146,12 @@ class UserConnectionForm(ModelForm):
 
         platform = self.cleaned_data.get("platform")
         custom_platform = self.cleaned_data.get(
-            "custom_platform", ""
+            "custom_platform",
+            "",
         ).strip()
 
+        # Kalau pilih Other, simpan nama custom
+        # langsung ke field platform.
         if platform == "other" and custom_platform:
             instance.platform = custom_platform
 

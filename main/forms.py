@@ -87,7 +87,7 @@ class UserConnectionForm(ModelForm):
         labels = {
             "platform": "Platform",
             "custom_platform": "Platform name",
-            "label": "Display name (optional)",
+            "label": "Display name",
             "url": "Profile link",
         }
         widgets = {

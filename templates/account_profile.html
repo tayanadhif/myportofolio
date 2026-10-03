@@ -136,38 +136,37 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".connection-form-row").forEach(function (row) {
-        const platformSelect = row.querySelector(
+        const platform = row.querySelector(
             'select[name$="-platform"]'
         );
 
-        const customPlatformField = row.querySelector(
+        const customPlatform = row.querySelector(
             'input[name$="-custom_platform"]'
         );
 
-        if (!platformSelect || !customPlatformField) {
+        const customPlatformField = row.querySelector(
+            ".custom-platform-field"
+        );
+
+        if (!platform || !customPlatform || !customPlatformField) {
             return;
         }
 
-        const customPlatformGroup =
-            customPlatformField.closest(".form-group");
-
-        function updateCustomPlatformVisibility() {
-            if (platformSelect.value === "other") {
-                customPlatformGroup.style.display = "";
+        function updateCustomPlatform() {
+            if (platform.value === "other") {
+                customPlatformField.style.display = "block";
             } else {
-                customPlatformGroup.style.display = "none";
-                customPlatformField.value = "";
+                customPlatformField.style.display = "none";
             }
         }
 
-        platformSelect.addEventListener(
+        platform.addEventListener(
             "change",
-            updateCustomPlatformVisibility
+            updateCustomPlatform
         );
 
-        updateCustomPlatformVisibility();
+        updateCustomPlatform();
     });
 });
 </script>
-
 {% endblock %}

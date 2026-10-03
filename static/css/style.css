@@ -2592,3 +2592,36 @@ body:not(.dark-mode) .member-filter-form select {
     cursor: not-allowed;
     pointer-events: none;
 }
+
+.member-filter-form input[type="search"] {
+    width: 100%;
+    box-sizing: border-box;
+    height: 42px;
+    padding: 0.7rem 0.9rem;
+
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+
+    border: 1px solid var(--project-panel-line);
+    border-radius: 4px;
+
+    font-family: inherit;
+    font-size: 0.9rem;
+    outline: none;
+
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.member-filter-form input[type="search"]::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.member-filter-form input[type="search"]:focus {
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.member-filter-form input[type="search"]::-webkit-search-cancel-button {
+    cursor: pointer;
+}

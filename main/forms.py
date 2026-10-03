@@ -86,16 +86,6 @@ class UserConnectionForm(ModelForm):
         ),
     )
 
-    url = URLInput(
-        label="Profile link",
-        required=False,
-        widget=URLInput(
-            attrs={
-                "placeholder": "https://...",
-            }
-        ),
-    )
-
     class Meta:
         model = UserConnection
         fields = (
@@ -116,6 +106,11 @@ class UserConnectionForm(ModelForm):
             "label": TextInput(
                 attrs={
                     "placeholder": "e.g. Bang Toon",
+                }
+            ),
+            "url": URLInput(
+                attrs={
+                    "placeholder": "https://...",
                 }
             ),
         }
@@ -142,19 +137,27 @@ class UserConnectionForm(ModelForm):
             "custom_platform",
             "",
         ).strip()
-        url = cleaned_data.get("url")
 
+        url = cleaned_data.get("url")
         label = cleaned_data.get("label") or ""
 
-        if not platform and not custom_platform and not url and not label:
+        # Row benar-benar kosong → boleh
+        if (
+            not platform
+            and not custom_platform
+            and not url
+            and not label
+        ):
             return cleaned_data
 
+        # Other harus punya nama platform
         if platform == "other" and not custom_platform:
             self.add_error(
                 "custom_platform",
                 "Please enter the platform name.",
             )
 
+        # Kalau platform dipilih, URL harus ada
         if platform and not url:
             self.add_error(
                 "url",
@@ -174,7 +177,6 @@ class UserConnectionForm(ModelForm):
             "",
         ).strip()
 
-        # Kalau Other + nama custom
         if platform == "other" and custom_platform:
             instance.platform = custom_platform
 

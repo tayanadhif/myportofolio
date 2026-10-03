@@ -2117,6 +2117,14 @@ body.dark-mode::after {
         grid-template-columns: 1fr;
     }
 
+    .connection-platform-field,
+    .connection-display-name-field,
+    .connection-url-field,
+    .custom-platform-field,
+    .connection-delete {
+        grid-column: 1;
+    }
+
     .community-chat-container {
         padding: 1.25rem 1rem;
     }

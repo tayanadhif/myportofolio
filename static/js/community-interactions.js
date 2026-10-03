@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const chatList = document.getElementById('chat-messages');
     const chatForm = document.getElementById('chat-form');
-    if (!chatList || !chatForm || !window.communityChatConfig) return;
+    if (!chatList || !window.communityChatConfig) return;
 
     const chatUrl = window.communityChatConfig.listUrl;
     const chatInput = document.getElementById('chat-message-input');
@@ -281,17 +281,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    chatForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        try {
-            await sendForm(chatUrl, { body: chatInput.value });
-            chatInput.value = '';
-            showSuccess('Message sent.');
-            await refreshChat();
-        } catch (error) {
-            showFailure(error.message);
-        }
-    });
+    if (chatForm && chatInput) {
+        chatForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            try {
+                await sendForm(chatUrl, { body: chatInput.value });
+                chatInput.value = '';
+                showSuccess('Message sent.');
+                await refreshChat();
+            } catch (error) {
+                showFailure(error.message);
+            }
+        });
+    }
 
     refreshChat();
     window.setInterval(refreshChat, 4000);

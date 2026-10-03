@@ -1061,10 +1061,6 @@ body.dark-mode .contact-form textarea::placeholder {
     .projects-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-
-    .site-header nav {
-        display: none;
-    }
 }
 
 @media (max-width: 560px) {

@@ -1797,14 +1797,14 @@ body.dark-mode::after {
 
 .connection-form-row {
     display: grid;
-    grid-template-columns:
-        minmax(140px, 0.7fr)
-        minmax(150px, 0.9fr)
-        minmax(280px, 1.8fr);
-    align-items: start;
+    grid-template-columns: minmax(140px, 0.7fr)
+                         minmax(150px, 0.9fr)
+                         minmax(280px, 1.8fr);
     gap: 0.8rem;
+
     margin: 1rem 0;
     padding: 1rem;
+
     background: rgba(127, 127, 127, 0.08);
     border: 1px solid var(--project-panel-line);
 }
@@ -1818,7 +1818,7 @@ body.dark-mode::after {
     grid-column: 1;
 }
 
-.connection-display-name-field {
+.connection-display-field {
     grid-column: 2;
 }
 
@@ -1829,37 +1829,70 @@ body.dark-mode::after {
 .custom-platform-field {
     grid-column: 1 / -1;
     display: none;
-    margin-top: 0.2rem !important;
+    margin-top: 0.2rem;
+}
+
+.custom-platform-field label,
+.connection-platform-field label,
+.connection-display-field label,
+.connection-url-field label {
+    display: block;
+    margin-bottom: 0.55rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--project-panel-text);
+}
+
+.custom-platform-field input,
+.connection-platform-field select,
+.connection-display-field input,
+.connection-url-field input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 0.7rem;
+
+    border: 1px solid var(--field-border);
+    border-radius: 3px;
+
+    background: var(--field-bg);
+    color: var(--field-text);
+
+    font: inherit;
 }
 
 .connection-delete {
     grid-column: 1 / -1;
+
     display: flex;
     align-items: center;
+
     gap: 0.6rem;
+
     margin: 0;
     padding-top: 0.4rem;
+
     white-space: nowrap;
 }
 
 .connection-delete input[type="checkbox"] {
     width: 18px;
     height: 18px;
+
     margin: 0;
+
     cursor: pointer;
     accent-color: var(--accent);
 }
 
 .connection-delete label {
     margin: 0;
+
     font-size: 0.9rem;
     font-weight: 600;
-    cursor: pointer;
-}
 
-.connection-form-row .form-group {
-    min-width: 0;
-    margin-bottom: 0;
+    cursor: pointer;
 }
 
 .connection-links {

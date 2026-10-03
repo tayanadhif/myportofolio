@@ -45,33 +45,88 @@
             <section class="connection-editor" aria-labelledby="connections-title">
                 <div class="connection-editor-heading">
                     <h2 id="connections-title">Connections</h2>
-                    <p>Add links to your YouTube, Instagram, TikTok, Roblox, Spotify, and other profiles.</p>
+                    <p>
+                        Add links to your YouTube, Instagram, TikTok, Roblox,
+                        Spotify, and other profiles.
+                    </p>
                 </div>
+
                 {{ connections_formset.management_form }}
+
                 {% for connection_form in connections_formset %}
-                <div class="connection-form-row">
-                    <div class="form-group custom-platform-field">
-                        <label for="{{ connection_form.custom_platform.id_for_label }}">
-                            {{ connection_form.custom_platform.label }}
-                        </label>
-                        {{ connection_form.custom_platform }}
+                    <div class="connection-form-row">
 
-                        {% for error in connection_form.custom_platform.errors %}
-                            <p class="form-error">{{ error }}</p>
+                        {% for hidden in connection_form.hidden_fields %}
+                            {{ hidden }}
                         {% endfor %}
-                    </div>
 
-                    {% if connection_form.DELETE %}
+                        <!-- PLATFORM -->
+                        <div class="form-group connection-platform-field">
+                            <label for="{{ connection_form.platform.id_for_label }}">
+                                {{ connection_form.platform.label }}
+                            </label>
+
+                            {{ connection_form.platform }}
+
+                            {% for error in connection_form.platform.errors %}
+                                <p class="form-error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <!-- DISPLAY NAME -->
+                        <div class="form-group connection-display-field">
+                            <label for="{{ connection_form.label.id_for_label }}">
+                                {{ connection_form.label.label }}
+                            </label>
+
+                            {{ connection_form.label }}
+
+                            {% for error in connection_form.label.errors %}
+                                <p class="form-error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <!-- PROFILE LINK -->
+                        <div class="form-group connection-url-field">
+                            <label for="{{ connection_form.url.id_for_label }}">
+                                {{ connection_form.url.label }}
+                            </label>
+
+                            {{ connection_form.url }}
+
+                            {% for error in connection_form.url.errors %}
+                                <p class="form-error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <!-- CUSTOM PLATFORM -->
+                        <div class="form-group custom-platform-field">
+                            <label for="{{ connection_form.custom_platform.id_for_label }}">
+                                {{ connection_form.custom_platform.label }}
+                            </label>
+
+                            {{ connection_form.custom_platform }}
+
+                            {% for error in connection_form.custom_platform.errors %}
+                                <p class="form-error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <!-- DELETE -->
                         <div class="connection-delete">
                             {{ connection_form.DELETE }}
+
                             <label for="{{ connection_form.DELETE.id_for_label }}">
                                 Delete this connection
                             </label>
                         </div>
-                    {% endif %}
-                </div>
+
+                    </div>
                 {% endfor %}
-                {% for error in connections_formset.non_form_errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+
+                {% for error in connections_formset.non_form_errors %}
+                    <p class="form-error">{{ error }}</p>
+                {% endfor %}
             </section>
 
             <button type="submit" class="button">Save Profile</button>

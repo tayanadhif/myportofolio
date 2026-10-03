@@ -1797,13 +1797,46 @@ body.dark-mode::after {
 
 .connection-form-row {
     display: grid;
-    grid-template-columns: minmax(140px, 0.65fr) minmax(150px, 0.8fr) minmax(220px, 1.5fr) auto;
+    grid-template-columns:
+        minmax(140px, 0.7fr)
+        minmax(150px, 0.9fr)
+        minmax(280px, 1.8fr);
     align-items: end;
     gap: 0.8rem;
     margin: 1rem 0;
     padding: 1rem;
     background: rgba(127, 127, 127, 0.08);
     border: 1px solid var(--project-panel-line);
+}
+
+.connection-form-row .form-group {
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+.connection-delete {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-left: 0;
+    padding-top: 0.4rem;
+    white-space: nowrap;
+}
+
+.connection-delete input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--accent);
+}
+
+.connection-delete label {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
 }
 
 .connection-form-row .form-group {

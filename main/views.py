@@ -12,8 +12,8 @@ from django.core import serializers
 from django.core.mail import send_mail
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
-from django.db.models import Count
-from django.http import HttpResponse, JsonResponse
+from django.db.models import Count, Q
+from django.http import HttpResponse, JsonResponse, request
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -68,6 +68,7 @@ def show_main(request):
 
     sort_mode = request.GET.get("sort", "last_login_desc").strip()
     member_limit = request.GET.get("limit", "10").strip()
+    member_search = request.GET.get("member_search", "").strip()
 
     if member_limit not in {"10", "30", "50"}:
         member_limit = "10"
@@ -82,9 +83,16 @@ def show_main(request):
     if sort_mode not in sort_options:
         sort_mode = "last_login_desc"
 
-    members = User.objects.exclude(
-        last_login__isnull=True
-    ).order_by(sort_options[sort_mode])
+    members = User.objects.exclude(last_login__isnull=True)
+
+    if member_search:
+        members = members.filter(
+            Q(username__icontains=member_search)
+            | Q(first_name__icontains=member_search)
+            | Q(last_name__icontains=member_search)
+        )
+
+    members = members.order_by(sort_options[sort_mode])
 
     total_matching_members = members.count()
 
@@ -104,6 +112,7 @@ def show_main(request):
         "member_page": member_page,
         "member_limit": member_limit,
         "sort_mode": sort_mode,
+        "member_search": member_search,
         "total_matching_members": total_matching_members,
     }
 

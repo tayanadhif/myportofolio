@@ -69,6 +69,17 @@
 
         <form method="get" action="{% url 'main:show_main' %}#members" class="member-filter-form">
             <label>
+                Search member
+                <input
+                    type="search"
+                    name="member_search"
+                    value="{{ member_search }}"
+                    placeholder="Search by username or name..."
+                    autocomplete="off"
+                >
+            </label>
+
+            <label>
                 Sort by
                 <select name="sort">
                     <option value="last_login_desc"
@@ -92,6 +103,7 @@
                     </option>
                 </select>
             </label>
+
             <label>
                 Show
                 <select name="limit">
@@ -100,7 +112,8 @@
                     <option value="50" {% if member_limit == "50" %}selected{% endif %}>1-50</option>
                 </select>
             </label>
-            <button type="submit" class="button">Filter</button>
+
+            <button type="submit" class="button">Search</button>
             <a class="button button-secondary" href="{% url 'main:show_main' %}#members">Reset</a>
         </form>
         <p class="members-result-count">

@@ -81,9 +81,10 @@ class UserConnectionForm(ModelForm):
 
     class Meta:
         model = UserConnection
-        fields = ("platform", "label", "url")
+        fields = ("platform", "custom_platform", "label", "url")
         labels = {
             "platform": "Platform",
+            "custom_platform": "Platform name",
             "label": "Display name (optional)",
             "url": "Profile link",
         }

@@ -50,12 +50,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const heading = document.createElement('div');
         heading.className = 'discussion-item-heading';
+
+        const memberInfo = document.createElement('div');
+        memberInfo.className = 'discussion-member-info';
+
+        const avatar = document.createElement('div');
+        avatar.className = 'discussion-avatar';
+
+        if (item.profile_image_url) {
+            const avatarImage = document.createElement('img');
+            avatarImage.src = item.profile_image_url;
+            avatarImage.alt = `Profile picture for ${item.username}`;
+            avatar.appendChild(avatarImage);
+        } else {
+            avatar.textContent = item.username.charAt(0).toUpperCase();
+        }
+
         const memberLink = document.createElement('a');
         memberLink.href = `/members/${encodeURIComponent(item.username)}/`;
         memberLink.textContent = item.username;
+
+        memberInfo.append(avatar, memberLink);
+
         const timestamp = document.createElement('time');
         timestamp.textContent = item.created_at;
-        heading.append(memberLink, timestamp);
+
+        heading.append(memberInfo, timestamp);
 
         const body = document.createElement('p');
         body.className = 'discussion-item-body';

@@ -347,12 +347,30 @@ def get_projects_json(request):
 
 
 def _discussion_payload(item, user):
+    profile_image_url = None
+
+    try:
+        profile = item.user.profile
+        if profile.profile_image and profile.profile_image.storage.exists(profile.profile_image.name):
+            profile_image_url = profile.profile_image.url
+    except UserProfile.DoesNotExist:
+        pass
+
     return {
         "id": item.id,
         "username": item.user.username,
+        "profile_image_url": profile_image_url,
         "body": item.body,
         "reply_to": {
             "username": item.reply_to.user.username,
+            "profile_image_url": (
+                item.reply_to.user.profile.profile_image.url
+                if item.reply_to.user.profile.profile_image
+                and item.reply_to.user.profile.profile_image.storage.exists(
+                    item.reply_to.user.profile.profile_image.name
+                )
+                else None
+            ),
             "body": item.reply_to.body,
         } if item.reply_to_id else None,
         "created_at": timezone.localtime(item.created_at).strftime("%d %b %Y, %H:%M"),
@@ -397,7 +415,13 @@ def community_chat(request):
 @require_http_methods(["GET", "POST"])
 def chat_messages(request):
     if request.method == "GET":
-        messages_list = ChatMessage.objects.select_related("user").order_by("-created_at")[:100]
+        messages_list = ChatMessage.objects.select_related(
+            "user",
+            "user__profile",
+            "reply_to",
+            "reply_to__user",
+            "reply_to__user__profile",
+        ).order_by("-created_at")[:100]
         return JsonResponse(
             [_discussion_payload(item, request.user) for item in reversed(list(messages_list))],
             safe=False,
@@ -456,7 +480,13 @@ def chat_message_action(request, message_id):
 def project_comments(request, project_id):
     project = get_object_or_404(PortfolioItem, pk=project_id)
     if request.method == "GET":
-        comments = project.comments.select_related("user").order_by("created_at")
+        comments = project.comments.select_related(
+            "user",
+            "user__profile",
+            "reply_to",
+            "reply_to__user",
+            "reply_to__user__profile",
+        ).order_by("created_at")
         return JsonResponse([_discussion_payload(item, request.user) for item in comments], safe=False)
 
     if not request.user.is_authenticated:

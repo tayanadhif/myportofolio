@@ -52,11 +52,26 @@
                 <div class="connection-form-row">
                     {% for hidden in connection_form.hidden_fields %}{{ hidden }}{% endfor %}
                     {% for field in connection_form.visible_fields %}
-                    <div class="form-group">
-                        {% if field.name != "DELETE" %}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{% endif %}
-                        {{ field }}
-                        {% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
-                    </div>
+                        {% if field.name == "DELETE" %}
+                            <div class="connection-delete">
+                                {{ field }}
+                                <label for="{{ field.id_for_label }}">
+                                    Delete this connection
+                                </label>
+                            </div>
+                            {% for error in field.errors %}
+                                <p class="form-error">{{ error }}</p>
+                            {% endfor %}
+                        {% else %}
+                            <div class="form-group">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+
+                                {% for error in field.errors %}
+                                    <p class="form-error">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     {% endfor %}
                 </div>
                 {% endfor %}
@@ -67,4 +82,39 @@
         </form>
     </div>
 </section>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".connection-form-row").forEach(function (row) {
+        const platformSelect = row.querySelector(
+            'select[name$="-platform"]'
+        );
+
+        const customPlatformField = row.querySelector(
+            'input[name$="-custom_platform"]'
+        );
+
+        if (!platformSelect || !customPlatformField) {
+            return;
+        }
+
+        const customPlatformGroup = customPlatformField.closest(".form-group");
+
+        function updateCustomPlatformVisibility() {
+            if (platformSelect.value === "other") {
+                customPlatformGroup.style.display = "";
+            } else {
+                customPlatformGroup.style.display = "none";
+                customPlatformField.value = "";
+            }
+        }
+
+        platformSelect.addEventListener(
+            "change",
+            updateCustomPlatformVisibility
+        );
+
+        updateCustomPlatformVisibility();
+    });
+});
+</script>
 {% endblock %}

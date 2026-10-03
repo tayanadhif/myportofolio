@@ -91,7 +91,7 @@ class UserConnection(models.Model):
 
     id = models.BigAutoField(primary_key=True)
     profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="connections")
-    platform = models.CharField(max_length=20, choices=PLATFORM_CHOICES)
+    platform = models.CharField(max_length=50, choices=PLATFORM_CHOICES)
     label = models.CharField(max_length=80, blank=True)
     url = models.URLField(max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)

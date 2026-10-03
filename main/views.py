@@ -11,6 +11,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.core import serializers
 from django.core.mail import send_mail
 from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator
 from django.db.models import Count
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -87,6 +88,10 @@ def show_main(request):
 
     total_matching_members = members.count()
 
+    paginator = Paginator(members, int(member_limit))
+    page_number = request.GET.get("page", 1)
+    member_page = paginator.get_page(page_number)
+
     context = {
         "name": "Nadhif Aydin Adinandra",
         "npm": "2506537745",
@@ -95,7 +100,8 @@ def show_main(request):
             "Computer Science student at Universitas Indonesia interested in programming, mathematics, and game development. Outside of academics, I also create gaming content on YouTube, sharing gameplay, longplays, and other gaming projects. Feel free to check out my channel and see what I do beyond Fasilkom. I also enjoy exploring new technologies and staying up-to-date with the latest trends in the tech world. My passion for learning drives me to continuously improve my skills and contribute to exciting projects."
         ),
         "last_login": last_login,
-        "logged_in_members": members[:int(member_limit)],
+        "logged_in_members": member_page,
+        "member_page": member_page,
         "member_limit": member_limit,
         "sort_mode": sort_mode,
         "total_matching_members": total_matching_members,
@@ -405,7 +411,6 @@ def _send_reply_notification(request, reply, subject, destination):
         return False
 
 
-@login_required
 def community_chat(request):
     return render(request, "community_chat.html", {
         "name": "Nadhif Aydin Adinandra",

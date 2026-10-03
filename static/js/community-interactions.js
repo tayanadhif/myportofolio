@@ -267,7 +267,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const snapshot = JSON.stringify(messages);
             if (snapshot !== lastChatSnapshot) {
                 lastChatSnapshot = snapshot;
-                renderDiscussion(chatList, messages, refreshChat, chatUrl, true);
+                renderDiscussion(chatList, messages, refreshChat, chatUrl, 
+                    Boolean(window.communityChatConfig?.isAuthenticated));
                 const scrollParent = chatList;
                 scrollParent.scrollTop = scrollParent.scrollHeight;
             }

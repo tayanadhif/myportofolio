@@ -3,7 +3,7 @@ import re
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from django.forms import ModelForm, TextInput, Textarea, URLInput, inlineformset_factory
+from django.forms import CharField, ChoiceField, ModelForm, TextInput, Textarea, URLInput, inlineformset_factory
 from django.utils.html import strip_tags
 
 from main.models import PortfolioItem, ProjectSubmission, UserConnection, UserProfile
@@ -65,6 +65,20 @@ class UserProfileForm(ModelForm):
 
 
 class UserConnectionForm(ModelForm):
+    platform = ChoiceField(
+        choices=UserConnection.PLATFORM_CHOICES,
+        label="Platform"
+    )
+
+    custom_platform = CharField(
+        label="Platform name",
+        required=False,
+        max_length=50,
+        widget=TextInput(attrs={
+            "placeholder": "e.g. Discord"
+        })
+    )
+
     class Meta:
         model = UserConnection
         fields = ("platform", "label", "url")
@@ -77,6 +91,35 @@ class UserConnectionForm(ModelForm):
             "label": TextInput(attrs={"placeholder": "e.g. Bang Toon"}),
             "url": URLInput(attrs={"placeholder": "https://..."}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Kalau data lama menggunakan platform custom,
+        # tampilkan sebagai "Other".
+        if self.instance and self.instance.pk:
+            known_platforms = dict(UserConnection.PLATFORM_CHOICES)
+
+            if self.instance.platform not in known_platforms:
+                self.initial["platform"] = "other"
+                self.initial["custom_platform"] = self.instance.platform
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        platform = cleaned_data.get("platform")
+        custom_platform = cleaned_data.get("custom_platform", "").strip()
+
+        if platform == "other":
+            if not custom_platform:
+                self.add_error(
+                    "custom_platform",
+                    "Please enter the platform name."
+                )
+            else:
+                cleaned_data["platform"] = custom_platform
+
+        return cleaned_data
 
 
 UserConnectionFormSet = inlineformset_factory(

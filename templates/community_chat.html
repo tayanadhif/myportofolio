@@ -15,12 +15,30 @@
         <div id="chat-messages" class="chat-message-list" role="log" aria-live="polite" aria-relevant="additions text">
             <p id="chat-loading" class="loading-state">Loading messages...</p>
         </div>
+        {% if request.user.is_authenticated %}
         <form id="chat-form" class="chat-compose-form">
             {% csrf_token %}
             <label for="chat-message-input">Message</label>
-            <textarea id="chat-message-input" name="body" rows="3" maxlength="2000" required placeholder="Write a message..."></textarea>
+            <textarea
+                id="chat-message-input"
+                name="body"
+                rows="3"
+                maxlength="2000"
+                required
+                placeholder="Write a message..."
+            ></textarea>
             <button class="button" type="submit">Send Message</button>
         </form>
+        {% else %}
+        <div class="chat-login-prompt">
+            <p>
+                Login to join the community chat.
+            </p>
+            <a href="{% url 'main:login' %}" class="button">
+                Login to Chat
+            </a>
+        </div>
+        {% endif %}
     </div>
 </section>
 <script>
@@ -28,6 +46,7 @@
         listUrl: "{% url 'main:chat_messages' %}",
         csrfToken: "{{ csrf_token }}",
         currentUsername: "{{ request.user.username|escapejs }}",
+        isAuthenticated: {{ request.user.is_authenticated|yesno:"true,false" }},
     };
 </script>
 {% endblock %}

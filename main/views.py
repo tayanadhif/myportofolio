@@ -1,5 +1,6 @@
 from functools import wraps
 import logging
+import mimetypes
 
 from django.conf import settings
 from django.contrib import messages
@@ -30,7 +31,7 @@ from main.forms import (
     UserConnectionFormSet,
     UserProfileForm,
 )
-from main.models import ChatMessage, Contact, Experience, PortfolioItem, ProjectComment, UserProfile
+from main.models import ChatMessage, Contact, Experience, PortfolioItem, ProjectComment, StoredMedia, UserProfile
 
 
 EDITOR_REQUIRED_PERMISSIONS = (
@@ -914,3 +915,11 @@ def contact_update(request, pk):
     contact.phone = data.get("phone", contact.phone).strip()
     contact.save(update_fields=["name", "email", "phone"])
     return render(request, "_contact_row.html", {"contact": contact})
+
+
+def serve_media(request, name):
+    media = get_object_or_404(StoredMedia, name=name)
+    content_type = media.content_type or mimetypes.guess_type(name)[0] or "application/octet-stream"
+    response = HttpResponse(bytes(media.content), content_type=content_type)
+    response["X-Content-Type-Options"] = "nosniff"
+    return response

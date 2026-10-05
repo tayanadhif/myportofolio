@@ -1,7 +1,10 @@
+from uuid import uuid4
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core import mail
+from django.core.files.base import ContentFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -190,6 +193,24 @@ class MainTest(TestCase):
 		self.assertEqual(response.status_code, 200)
 		self.assertContains(response, 'aria-hidden="true">A</span>')
 		self.assertNotContains(response, "/media/profiles/missing-avatar.jpg")
+
+	def test_profile_images_are_stored_in_the_database_and_served(self):
+		storage = UserProfile._meta.get_field("profile_image").storage
+		image_content = b"persistent-profile-image"
+		image_name = storage.save(
+			f"profiles/test-{uuid4().hex}.png",
+			ContentFile(image_content),
+		)
+		try:
+			self.assertTrue(storage.exists(image_name))
+			with storage.open(image_name) as stored_image:
+				self.assertEqual(stored_image.read(), image_content)
+			response = self.client.get(storage.url(image_name))
+			self.assertEqual(response.status_code, 200)
+			self.assertEqual(response.content, image_content)
+			self.assertEqual(response["X-Content-Type-Options"], "nosniff")
+		finally:
+			storage.delete(image_name)
 
 	def test_community_chat_allows_members_to_manage_only_their_messages(self):
 		chat_url = reverse("main:chat_messages")

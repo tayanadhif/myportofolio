@@ -73,4 +73,5 @@ urlpatterns = [
     path("contacts/<int:pk>/edit/", views.contact_edit, name="contact_edit"),
     path("contacts/<int:pk>/row/", views.contact_row, name="contact_row"),
     path("contacts/<int:pk>/update/", views.contact_update, name="contact_update"),
+    path("media-db/<path:name>", views.serve_media, name="serve_media"),
 ]

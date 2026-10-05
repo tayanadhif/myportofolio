@@ -39,8 +39,9 @@ class MainTest(TestCase):
 				"password2": "SafePassword!842",
 			},
 		)
-		self.assertRedirects(response, reverse("main:login"))
+		self.assertRedirects(response, reverse("main:show_main"))
 		user = get_user_model().objects.get(username="new-member")
+		self.assertEqual(self.client.session["_auth_user_id"], str(user.id))
 		self.assertEqual(user.email, "new-member@example.com")
 		self.assertEqual(user.profile.full_name, "New Member")
 

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Contacts - {{ name }}{% endblock %}
+
+{% block content %}
+<section class="contact-manager">
+  <div class="container contact-manager__container" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <header class="contact-manager__header">
+      <p class="contact-manager__eyebrow">Personal directory / 01</p>
+      <h1>Contacts</h1>
+      <p>Kelola detail kontak dalam satu tempat.</p>
+    </header>
+
+    <div class="contact-manager__panel">
+      <section class="contact-manager__add" aria-labelledby="contact-add-title">
+        <div class="contact-manager__section-heading">
+          <div>
+            <p class="contact-manager__eyebrow">New entry</p>
+            <h2 id="contact-add-title">Tambah Kontak</h2>
+          </div>
+          <span class="contact-manager__step">01 / ADD</span>
+        </div>
+        <form class="contact-manager__form" hx-post="{% url 'main:contact_add' %}"
+          hx-target="#contact-rows"
+          hx-swap="beforeend"
+          hx-on::after-request="if (event.detail.successful) this.reset()">
+          {% csrf_token %}
+          <label class="contact-manager__field">
+            <span>Nama</span>
+            <input type="text" name="name" placeholder="Nama kontak" maxlength="100" required>
+          </label>
+          <label class="contact-manager__field">
+            <span>Email</span>
+            <input type="email" name="email" placeholder="nama@email.com" maxlength="254" required>
+          </label>
+          <label class="contact-manager__field">
+            <span>Telepon <small>Opsional</small></span>
+            <input type="tel" name="phone" placeholder="+62 ..." maxlength="20">
+          </label>
+          <button class="contact-manager__add-button" type="submit"><span>+</span> Tambah</button>
+        </form>
+        <div id="feedback" class="contact-manager__feedback" aria-live="polite"></div>
+      </section>
+
+      <section class="contact-manager__list" aria-labelledby="contact-list-title">
+        <div class="contact-manager__section-heading contact-manager__list-heading">
+          <div>
+            <p class="contact-manager__eyebrow">Directory</p>
+            <h2 id="contact-list-title">Daftar Kontak</h2>
+          </div>
+          <label class="contact-manager__search">
+            <span class="sr-only">Cari kontak</span>
+            <input id="contact-search" type="search" name="q" placeholder="Cari nama..."
+                   hx-get="{% url 'main:contact_search' %}"
+                   hx-trigger="keyup changed delay:300ms, search"
+                   hx-target="#contact-rows"
+                   hx-indicator="#search-indicator">
+            <span id="search-indicator" class="htmx-indicator" aria-hidden="true">SEARCHING</span>
+          </label>
+        </div>
+
+        <div class="contact-manager__table-wrap">
+          <table class="contact-manager__table">
+            <thead><tr><th>Nama</th><th>Email</th><th>Telepon</th><th>Aksi</th></tr></thead>
+            <tbody id="contact-rows">
+              {% include "_contact_rows.html" %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.11/dist/htmx.min.js"></script>
+{% endblock %}

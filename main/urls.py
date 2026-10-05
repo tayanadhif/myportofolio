@@ -1,4 +1,4 @@
-from django.contrib.auth import views
+from . import views
 from django.urls import include, path
 
 from main.views import (
@@ -66,4 +66,11 @@ urlpatterns = [
     path("projects/<uuid:project_id>/star/", toggle_star, name="toggle_star"),
     path("projects/reorder/", update_project_order, name="update_project_order"),
     path("projects/add-ajax/", create_project_ajax, name="create_project_ajax"),
+    path("contacts/", views.contact_list, name="contact_list"),
+    path("contacts/add/", views.contact_add, name="contact_add"),
+    path("contacts/search/", views.contact_search, name="contact_search"),
+    path("contacts/<int:pk>/delete/", views.contact_delete, name="contact_delete"),
+    path("contacts/<int:pk>/edit/", views.contact_edit, name="contact_edit"),
+    path("contacts/<int:pk>/row/", views.contact_row, name="contact_row"),
+    path("contacts/<int:pk>/update/", views.contact_update, name="contact_update"),
 ]

@@ -13,7 +13,8 @@ from django.core.mail import send_mail
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
-from django.http import HttpResponse, JsonResponse, request
+from django.http import HttpResponse, JsonResponse, QueryDict, request
+from django.middleware.csrf import get_token
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -29,7 +30,7 @@ from main.forms import (
     UserConnectionFormSet,
     UserProfileForm,
 )
-from main.models import ChatMessage, Experience, PortfolioItem, ProjectComment, UserProfile
+from main.models import ChatMessage, Contact, Experience, PortfolioItem, ProjectComment, UserProfile
 
 
 EDITOR_REQUIRED_PERMISSIONS = (
@@ -689,8 +690,9 @@ def register(request):
         )
         profile.full_name = form.cleaned_data["full_name"]
         profile.save(update_fields=["full_name"])
-        messages.success(request, "Akun berhasil dibuat. Silakan login.")
-        return redirect("main:login")
+        login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+        messages.success(request, "Akun berhasil dibuat. Selamat datang!")
+        return redirect("main:show_main")
 
     context = {
         "name": "Nadhif Aydin Adinandra",
@@ -850,3 +852,57 @@ def create_project_ajax(request):
         {"status": "error", "message": "Periksa kembali data project.", "errors": form.errors.get_json_data()},
         status=400,
     )
+
+
+def contact_list(request):
+    return render(request, "contacts/index.html", {
+        "name": "Nadhif Aydin Adinandra",
+        "contacts": Contact.objects.order_by("name", "pk"),
+        "csrf_token": get_token(request),
+    })
+
+
+@require_POST
+def contact_add(request):
+    contact = Contact.objects.create(
+        name=request.POST.get("name", "").strip(),
+        email=request.POST.get("email", "").strip(),
+        phone=request.POST.get("phone", "").strip(),
+    )
+    return render(request, "_contact_add_response.html", {"contact": contact})
+
+
+@require_http_methods(["DELETE"])
+def contact_delete(request, pk):
+    contact = get_object_or_404(Contact, pk=pk)
+    contact.delete()
+    return HttpResponse("")
+
+
+def contact_search(request):
+    query = request.GET.get("q", "").strip()
+    contacts = Contact.objects.order_by("name", "pk")
+    if query:
+        contacts = contacts.filter(name__icontains=query)
+    return render(request, "_contact_rows.html", {"contacts": contacts})
+
+
+def contact_edit(request, pk):
+    contact = get_object_or_404(Contact, pk=pk)
+    return render(request, "_contact_edit_row.html", {"contact": contact})
+
+
+def contact_row(request, pk):
+    contact = get_object_or_404(Contact, pk=pk)
+    return render(request, "_contact_row.html", {"contact": contact})
+
+
+@require_http_methods(["PUT"])
+def contact_update(request, pk):
+    contact = get_object_or_404(Contact, pk=pk)
+    data = QueryDict(request.body)
+    contact.name = data.get("name", contact.name).strip()
+    contact.email = data.get("email", contact.email).strip()
+    contact.phone = data.get("phone", contact.phone).strip()
+    contact.save(update_fields=["name", "email", "phone"])
+    return render(request, "_contact_row.html", {"contact": contact})

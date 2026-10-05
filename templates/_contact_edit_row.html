@@ -1,0 +1,16 @@
+<tr class="contact-manager__row contact-manager__row--editing" id="contact-{{ contact.id }}">
+  <td><input class="contact-manager__edit-input" type="text" name="name" value="{{ contact.name }}" required form="edit-form-{{ contact.id }}"></td>
+  <td><input class="contact-manager__edit-input" type="email" name="email" value="{{ contact.email }}" required form="edit-form-{{ contact.id }}"></td>
+  <td><input class="contact-manager__edit-input" type="tel" name="phone" value="{{ contact.phone }}" maxlength="20" form="edit-form-{{ contact.id }}"></td>
+  <td>
+    <form id="edit-form-{{ contact.id }}"
+          hx-put="{% url 'main:contact_update' contact.id %}"
+          hx-target="#contact-{{ contact.id }}"
+          hx-swap="outerHTML">
+      <button class="contact-manager__row-button" type="submit">Simpan</button>
+    </form>
+    <button hx-get="{% url 'main:contact_row' contact.id %}"
+            hx-target="#contact-{{ contact.id }}"
+            hx-swap="outerHTML" class="contact-manager__row-button">Batal</button>
+  </td>
+</tr>

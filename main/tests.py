@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from main.forms import PortfolioItemForm, ProjectSubmissionForm
-from main.models import ChatMessage, Experience, PortfolioItem, ProjectComment, UserConnection, UserProfile
+from main.models import ChatMessage, Contact, Experience, PortfolioItem, ProjectComment, UserConnection, UserProfile
 
 
 class MainTest(TestCase):
@@ -44,6 +44,78 @@ class MainTest(TestCase):
 		self.assertEqual(self.client.session["_auth_user_id"], str(user.id))
 		self.assertEqual(user.email, "new-member@example.com")
 		self.assertEqual(user.profile.full_name, "New Member")
+
+	def test_contacts_are_private_and_members_can_manage_only_their_own(self):
+		User = get_user_model()
+		owner = User.objects.create_user(username="contact-owner", password="strongpass123")
+		other = User.objects.create_user(username="contact-other", password="strongpass123")
+		own_contact = Contact.objects.create(
+			owner=owner,
+			name="My Contact",
+			email="mine@example.com",
+			phone="0811111111",
+		)
+		other_contact = Contact.objects.create(
+			owner=other,
+			name="Other Contact",
+			email="other@example.com",
+			phone="0822222222",
+		)
+		contacts_url = reverse("main:contact_list")
+		self.assertEqual(self.client.get(contacts_url).status_code, 302)
+
+		self.client.force_login(owner)
+		list_response = self.client.get(contacts_url)
+		self.assertContains(list_response, own_contact.name)
+		self.assertNotContains(list_response, other_contact.name)
+		search_response = self.client.get(reverse("main:contact_search"), {"q": "Contact"})
+		self.assertContains(search_response, own_contact.name)
+		self.assertNotContains(search_response, other_contact.name)
+
+		add_response = self.client.post(
+			reverse("main:contact_add"),
+			{"name": "New Own Contact", "email": "new@example.com", "phone": "0833333333"},
+		)
+		self.assertEqual(add_response.status_code, 200)
+		new_contact = Contact.objects.get(email="new@example.com")
+		self.assertEqual(new_contact.owner, owner)
+
+		self.assertEqual(
+			self.client.get(reverse("main:contact_edit", args=[other_contact.pk])).status_code,
+			404,
+		)
+		self.assertEqual(
+			self.client.get(reverse("main:contact_row", args=[other_contact.pk])).status_code,
+			404,
+		)
+		self.assertEqual(
+			self.client.put(
+				reverse("main:contact_update", args=[other_contact.pk]),
+				data="name=Changed&email=changed%40example.com&phone=0899999999",
+				content_type="application/x-www-form-urlencoded",
+			).status_code,
+			404,
+		)
+		self.assertEqual(
+			self.client.delete(reverse("main:contact_delete", args=[other_contact.pk])).status_code,
+			404,
+		)
+		other_contact.refresh_from_db()
+		self.assertEqual(other_contact.name, "Other Contact")
+		self.assertEqual(other_contact.email, "other@example.com")
+
+		own_update = self.client.put(
+			reverse("main:contact_update", args=[own_contact.pk]),
+			data="name=Updated+Own+Contact&email=updated%40example.com&phone=0844444444",
+			content_type="application/x-www-form-urlencoded",
+		)
+		self.assertEqual(own_update.status_code, 200)
+		own_contact.refresh_from_db()
+		self.assertEqual(own_contact.name, "Updated Own Contact")
+		self.assertEqual(own_contact.phone, "0844444444")
+
+		self.assertEqual(self.client.delete(reverse("main:contact_delete", args=[own_contact.pk])).status_code, 200)
+		self.assertFalse(Contact.objects.filter(pk=own_contact.pk).exists())
 
 	def test_profile_page_requires_login_and_updates_profile_fields(self):
 		profile_url = reverse("main:account_profile")

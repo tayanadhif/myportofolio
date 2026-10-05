@@ -854,17 +854,20 @@ def create_project_ajax(request):
     )
 
 
+@login_required
 def contact_list(request):
     return render(request, "contacts/index.html", {
         "name": "Nadhif Aydin Adinandra",
-        "contacts": Contact.objects.order_by("name", "pk"),
+        "contacts": Contact.objects.filter(owner=request.user).order_by("name", "pk"),
         "csrf_token": get_token(request),
     })
 
 
+@login_required
 @require_POST
 def contact_add(request):
     contact = Contact.objects.create(
+        owner=request.user,
         name=request.POST.get("name", "").strip(),
         email=request.POST.get("email", "").strip(),
         phone=request.POST.get("phone", "").strip(),
@@ -872,34 +875,39 @@ def contact_add(request):
     return render(request, "_contact_add_response.html", {"contact": contact})
 
 
+@login_required
 @require_http_methods(["DELETE"])
 def contact_delete(request, pk):
-    contact = get_object_or_404(Contact, pk=pk)
+    contact = get_object_or_404(Contact, pk=pk, owner=request.user)
     contact.delete()
     return HttpResponse("")
 
 
+@login_required
 def contact_search(request):
     query = request.GET.get("q", "").strip()
-    contacts = Contact.objects.order_by("name", "pk")
+    contacts = Contact.objects.filter(owner=request.user).order_by("name", "pk")
     if query:
         contacts = contacts.filter(name__icontains=query)
     return render(request, "_contact_rows.html", {"contacts": contacts})
 
 
+@login_required
 def contact_edit(request, pk):
-    contact = get_object_or_404(Contact, pk=pk)
+    contact = get_object_or_404(Contact, pk=pk, owner=request.user)
     return render(request, "_contact_edit_row.html", {"contact": contact})
 
 
+@login_required
 def contact_row(request, pk):
-    contact = get_object_or_404(Contact, pk=pk)
+    contact = get_object_or_404(Contact, pk=pk, owner=request.user)
     return render(request, "_contact_row.html", {"contact": contact})
 
 
+@login_required
 @require_http_methods(["PUT"])
 def contact_update(request, pk):
-    contact = get_object_or_404(Contact, pk=pk)
+    contact = get_object_or_404(Contact, pk=pk, owner=request.user)
     data = QueryDict(request.body)
     contact.name = data.get("name", contact.name).strip()
     contact.email = data.get("email", contact.email).strip()

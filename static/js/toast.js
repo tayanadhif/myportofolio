@@ -35,3 +35,13 @@ function showToast(title, message, type = 'normal', duration = 3000) {
         toastTimer = setTimeout(() => toastComponent.hidePopover(), 300);
     }, duration);
 }
+
+document.body.addEventListener('showToast', (event) => {
+    const detail = event.detail || {};
+    showToast(
+        detail.title || 'Informasi',
+        detail.message || '',
+        detail.type || 'normal',
+        detail.duration || 3000,
+    );
+});

@@ -80,6 +80,7 @@ class MainTest(TestCase):
 			{"name": "New Own Contact", "email": "new@example.com", "phone": "0833333333"},
 		)
 		self.assertEqual(add_response.status_code, 200)
+		self.assertIn('"showToast"', add_response["HX-Trigger"])
 		new_contact = Contact.objects.get(email="new@example.com")
 		self.assertEqual(new_contact.owner, owner)
 
@@ -113,11 +114,14 @@ class MainTest(TestCase):
 			content_type="application/x-www-form-urlencoded",
 		)
 		self.assertEqual(own_update.status_code, 200)
+		self.assertIn('"showToast"', own_update["HX-Trigger"])
 		own_contact.refresh_from_db()
 		self.assertEqual(own_contact.name, "Updated Own Contact")
 		self.assertEqual(own_contact.phone, "0844444444")
 
-		self.assertEqual(self.client.delete(reverse("main:contact_delete", args=[own_contact.pk])).status_code, 200)
+		delete_response = self.client.delete(reverse("main:contact_delete", args=[own_contact.pk]))
+		self.assertEqual(delete_response.status_code, 200)
+		self.assertIn('"showToast"', delete_response["HX-Trigger"])
 		self.assertFalse(Contact.objects.filter(pk=own_contact.pk).exists())
 
 	def test_profile_page_requires_login_and_updates_profile_fields(self):

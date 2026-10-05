@@ -1,4 +1,5 @@
 from functools import wraps
+import json
 import logging
 import mimetypes
 
@@ -567,7 +568,6 @@ def create_project(request):
 
     if request.method == "POST" and form.is_valid():
         project = form.save()
-        messages.success(request, "Project baru berhasil ditambahkan!")
 
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
             return JsonResponse({
@@ -585,6 +585,7 @@ def create_project(request):
                 },
             }, status=201)
 
+        messages.success(request, "Project baru berhasil ditambahkan!")
         return redirect("main:show_projects")
 
     if request.method == "POST" and not form.is_valid():
@@ -667,13 +668,13 @@ def delete_project(request, project_id):
 
     if request.method == "POST":
         portfolio_item.delete()
-        messages.success(request, "Project berhasil dihapus!")
 
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
             return JsonResponse({
                 "status": "success",
                 "message": "Project berhasil dihapus.",
             })
+        messages.success(request, "Project berhasil dihapus!")
 
     return redirect("main:show_projects")
 
@@ -763,6 +764,7 @@ def login_user(request):
 
     if request.method == "POST" and form.is_valid():
         login(request, form.get_user())
+        messages.success(request, "Berhasil masuk.")
         response = redirect("main:show_main")
         response.set_cookie(
             "last_login",
@@ -782,6 +784,7 @@ def login_user(request):
 
 def logout_user(request):
     logout(request)
+    messages.success(request, "Kamu berhasil keluar.")
     response = redirect("main:show_main")
     response.delete_cookie("last_login")
     return response
@@ -808,6 +811,7 @@ def toggle_star(request, project_id):
             "is_starred": is_starred,
         })
 
+    messages.success(request, message)
     return redirect("main:show_projects")
 
 
@@ -873,7 +877,15 @@ def contact_add(request):
         email=request.POST.get("email", "").strip(),
         phone=request.POST.get("phone", "").strip(),
     )
-    return render(request, "_contact_add_response.html", {"contact": contact})
+    response = render(request, "_contact_add_response.html", {"contact": contact})
+    response["HX-Trigger"] = json.dumps({
+        "showToast": {
+            "title": "Berhasil",
+            "message": "Kontak berhasil ditambahkan!",
+            "type": "success",
+        }
+    })
+    return response
 
 
 @login_required
@@ -881,7 +893,11 @@ def contact_add(request):
 def contact_delete(request, pk):
     contact = get_object_or_404(Contact, pk=pk, owner=request.user)
     contact.delete()
-    return HttpResponse("")
+    response = HttpResponse("")
+    response["HX-Trigger"] = json.dumps({
+        "showToast": {"title": "Berhasil", "message": "Kontak berhasil dihapus.", "type": "success"}
+    })
+    return response
 
 
 @login_required
@@ -914,7 +930,11 @@ def contact_update(request, pk):
     contact.email = data.get("email", contact.email).strip()
     contact.phone = data.get("phone", contact.phone).strip()
     contact.save(update_fields=["name", "email", "phone"])
-    return render(request, "_contact_row.html", {"contact": contact})
+    response = render(request, "_contact_row.html", {"contact": contact})
+    response["HX-Trigger"] = json.dumps({
+        "showToast": {"title": "Berhasil", "message": "Kontak berhasil diperbarui.", "type": "success"}
+    })
+    return response
 
 
 def serve_media(request, name):

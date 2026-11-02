@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.className = 'experience-card';
         card.dataset.projectId = project.id;
         card.dataset.category = project.category;
-        card.draggable = window.projectAjaxConfig?.canEdit === true;
+        card.draggable = false;
 
         const safeProjectId = escapeHtml(project.id || '');
         const safeStarCount = escapeHtml(project.star_count || 0);
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
             : `<a href="${escapeHtml(window.projectAjaxConfig?.loginUrl || '/login/')}" class="button button-secondary">Login / Register to star (${safeStarCount})</a>`;
 
         card.innerHTML = `
-            ${window.projectAjaxConfig?.canEdit ? '<div class="project-card-header"><span class="drag-handle" draggable="true" aria-label="Geser project" title="Geser project">⋮⋮</span></div>' : ''}
+            ${window.projectAjaxConfig?.canEdit ? '<div class="project-card-header"><span class="drag-handle" role="button" tabindex="0" aria-label="Geser project" title="Geser project">⋮⋮</span></div>' : ''}
             ${image}
             <h2>${escapeHtml(project.title)}</h2>
             <span class="experience-category">${escapeHtml(project.tech_stack || '')}</span>
@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(() => fetchProjects())
                 .then(() => window.showToast?.('Berhasil', 'Status star diperbarui.', 'success'))
                 .catch((error) => {
-                    if (error.status === 403 && !window.projectAjaxConfig?.isAuthenticated) {
+                    if (error.status === 403) {
                         window.location.assign(window.projectAjaxConfig?.loginUrl || '/login/');
                         return;
                     }
@@ -346,48 +346,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     });
 
-    let draggedItemId = null;
+    let activeDrag = null;
 
-    projectGrid.addEventListener('dragstart', (event) => {
-        const card = event.target.closest('.experience-card');
-        if (!card || !card.draggable) return;
-        draggedItemId = card.dataset.projectId;
-        card.classList.add('dragging');
-        event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.setData('text/plain', draggedItemId);
-    });
-
-    projectGrid.addEventListener('dragover', (event) => {
-        const card = event.target.closest('.experience-card');
-        if (!card || !draggedItemId || !card.draggable) return;
-        event.preventDefault();
-        card.classList.add('drag-over');
-    });
-
-    projectGrid.addEventListener('dragleave', (event) => {
-        const card = event.target.closest('.experience-card');
-        if (card && !card.contains(event.relatedTarget)) card.classList.remove('drag-over');
-    });
-
-    projectGrid.addEventListener('drop', (event) => {
-        const targetCard = event.target.closest('.experience-card');
-        if (!targetCard || !draggedItemId || !targetCard.draggable) return;
-        event.preventDefault();
-        targetCard.classList.remove('drag-over');
-
-        if (draggedItemId === targetCard.dataset.projectId) return;
-
-        const cardsAfterReorder = Array.from(projectGrid.querySelectorAll('.experience-card'));
-        const sourceIndex = cardsAfterReorder.findIndex((item) => item.dataset.projectId === draggedItemId);
-        const targetIndex = cardsAfterReorder.findIndex((item) => item.dataset.projectId === targetCard.dataset.projectId);
-        if (sourceIndex === -1 || targetIndex === -1) return;
-
-        const [movedCard] = cardsAfterReorder.splice(sourceIndex, 1);
-        cardsAfterReorder.splice(targetIndex, 0, movedCard);
-        cardsAfterReorder.forEach((item) => projectGrid.appendChild(item));
-
+    const saveProjectOrder = () => {
         const params = new URLSearchParams();
-        cardsAfterReorder.forEach((card) => params.append('project_ids[]', card.dataset.projectId));
+        projectGrid.querySelectorAll('.experience-card').forEach((card) => {
+            params.append('project_ids[]', card.dataset.projectId);
+        });
         fetch(window.projectAjaxConfig?.orderEndpoint || '/projects/reorder/', {
             method: 'POST',
             headers: {
@@ -400,15 +365,57 @@ document.addEventListener('DOMContentLoaded', () => {
         }).catch(() => {
             window.location.reload();
         });
+    };
+
+    const clearDragStyles = () => {
+        projectGrid.querySelectorAll('.experience-card').forEach((item) => {
+            item.classList.remove('dragging', 'drag-over');
+        });
+    };
+
+    projectGrid.addEventListener('pointerdown', (event) => {
+        const handle = event.target.closest('.drag-handle');
+        const card = handle?.closest('.experience-card');
+        if (!handle || !card || !window.projectAjaxConfig?.canEdit || event.button !== 0) return;
+        event.preventDefault();
+        activeDrag = { card, handle, pointerId: event.pointerId, moved: false };
+        card.classList.add('dragging');
+        handle.setPointerCapture(event.pointerId);
     });
 
-    projectGrid.addEventListener('dragend', (event) => {
-        const card = event.target.closest('.experience-card');
-        if (card) card.classList.remove('dragging');
-        draggedItemId = null;
-        projectGrid.querySelectorAll('.experience-card').forEach((item) => {
-            item.classList.remove('drag-over');
-        });
+    projectGrid.addEventListener('pointermove', (event) => {
+        if (!activeDrag || event.pointerId !== activeDrag.pointerId) return;
+        event.preventDefault();
+        const target = document.elementFromPoint(event.clientX, event.clientY)
+            ?.closest('.experience-card');
+        if (!target || target === activeDrag.card) return;
+
+        const rect = target.getBoundingClientRect();
+        const nearVerticalCenter = Math.abs(event.clientY - (rect.top + rect.height / 2)) < rect.height * 0.3;
+        const insertAfter = event.clientY > rect.top + rect.height / 2
+            || (nearVerticalCenter && event.clientX > rect.left + rect.width / 2);
+        projectGrid.querySelectorAll('.experience-card').forEach((item) => item.classList.remove('drag-over'));
+        target.classList.add('drag-over');
+        projectGrid.insertBefore(activeDrag.card, insertAfter ? target.nextElementSibling : target);
+        activeDrag.moved = true;
+    });
+
+    const finishPointerDrag = (event) => {
+        if (!activeDrag || (event && event.pointerId !== activeDrag.pointerId)) return;
+        const { handle, pointerId, moved } = activeDrag;
+        activeDrag = null;
+        if (handle.hasPointerCapture(pointerId)) handle.releasePointerCapture(pointerId);
+        clearDragStyles();
+        if (moved) saveProjectOrder();
+    };
+
+    projectGrid.addEventListener('pointerup', finishPointerDrag);
+    projectGrid.addEventListener('pointercancel', (event) => {
+        if (!activeDrag || event.pointerId !== activeDrag.pointerId) return;
+        const { handle, pointerId } = activeDrag;
+        activeDrag = null;
+        if (handle.hasPointerCapture(pointerId)) handle.releasePointerCapture(pointerId);
+        clearDragStyles();
     });
 
     if (searchInput && !searchInput.dataset.ajaxBound) {

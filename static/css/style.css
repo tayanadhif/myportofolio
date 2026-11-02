@@ -900,6 +900,11 @@ body.dark-mode .contact-form textarea::placeholder {
     color: var(--text-muted);
     cursor: grab;
     user-select: none;
+    touch-action: none;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
 }
 
 .dragging {

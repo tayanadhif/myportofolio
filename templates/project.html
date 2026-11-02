@@ -99,6 +99,7 @@
         projectsEndpoint: "{% url 'api:project-list' %}",
         detailProjectEndpoint: "{% url 'api:project-detail' '00000000-0000-0000-0000-000000000000' %}",
         starProjectEndpoint: "{% url 'api:project-star' '00000000-0000-0000-0000-000000000000' %}",
+        loginUrl: "{% url 'main:login' %}?next={% url 'main:show_projects' %}",
         canEdit: {{ user_can_edit|yesno:"true,false" }},
         canDelete: {{ user.is_superuser|yesno:"true,false" }},
         isAuthenticated: {{ user.is_authenticated|yesno:"true,false" }},

@@ -45,7 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!response.ok) {
             const detail = Object.values(payload).flat()
                 .filter((value) => typeof value === 'string').join(' ');
-            throw new Error(detail || `Request failed (HTTP ${response.status}).`);
+            const error = new Error(detail || `Request failed (HTTP ${response.status}).`);
+            error.status = response.status;
+            throw error;
         }
         return payload;
     };
@@ -96,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const starButton = window.projectAjaxConfig?.isAuthenticated
             ? `<button type="button" class="button button-secondary" data-star-project-id="${safeProjectId}">${starLabel} (${safeStarCount})</button>`
-            : `<a href="/login/" class="button button-secondary">${starLabel} (${safeStarCount})</a>`;
+            : `<a href="${escapeHtml(window.projectAjaxConfig?.loginUrl || '/login/')}" class="button button-secondary">Login / Register to star (${safeStarCount})</a>`;
 
         card.innerHTML = `
             ${window.projectAjaxConfig && window.projectAjaxConfig.canEdit ? '<div class="project-card-header"><span class="drag-handle" aria-label="Geser project" title="Geser project">⋮⋮</span></div>' : ''}
@@ -291,6 +293,10 @@ document.addEventListener('DOMContentLoaded', () => {
     projectGrid.addEventListener('click', (event) => {
         const starButton = event.target.closest('[data-star-project-id]');
         if (starButton) {
+            if (!window.projectAjaxConfig?.isAuthenticated) {
+                window.location.assign(window.projectAjaxConfig?.loginUrl || '/login/');
+                return;
+            }
             const endpoint = window.projectAjaxConfig.starProjectEndpoint.replace(
                 '00000000-0000-0000-0000-000000000000', starButton.dataset.starProjectId,
             );
@@ -298,7 +304,13 @@ document.addEventListener('DOMContentLoaded', () => {
             apiRequest(endpoint, { method: 'POST' })
                 .then(() => fetchProjects())
                 .then(() => window.showToast?.('Berhasil', 'Status star diperbarui.', 'success'))
-                .catch((error) => window.showToast?.('Gagal', error.message, 'error'))
+                .catch((error) => {
+                    if (error.status === 403 && !window.projectAjaxConfig?.isAuthenticated) {
+                        window.location.assign(window.projectAjaxConfig?.loginUrl || '/login/');
+                        return;
+                    }
+                    window.showToast?.('Gagal', error.message, 'error');
+                })
                 .finally(() => { starButton.disabled = false; });
             return;
         }

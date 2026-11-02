@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.className = 'experience-card';
         card.dataset.projectId = project.id;
         card.dataset.category = project.category;
-        card.draggable = (window.projectAjaxConfig && window.projectAjaxConfig.canEdit === true) ? 'true' : 'false';
+        card.draggable = window.projectAjaxConfig?.canEdit === true;
 
         const safeProjectId = escapeHtml(project.id || '');
         const safeStarCount = escapeHtml(project.star_count || 0);
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
             : `<a href="${escapeHtml(window.projectAjaxConfig?.loginUrl || '/login/')}" class="button button-secondary">Login / Register to star (${safeStarCount})</a>`;
 
         card.innerHTML = `
-            ${window.projectAjaxConfig && window.projectAjaxConfig.canEdit ? '<div class="project-card-header"><span class="drag-handle" aria-label="Geser project" title="Geser project">⋮⋮</span></div>' : ''}
+            ${window.projectAjaxConfig?.canEdit ? '<div class="project-card-header"><span class="drag-handle" draggable="true" aria-label="Geser project" title="Geser project">⋮⋮</span></div>' : ''}
             ${image}
             <h2>${escapeHtml(project.title)}</h2>
             <span class="experience-category">${escapeHtml(project.tech_stack || '')}</span>
@@ -388,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const params = new URLSearchParams();
         cardsAfterReorder.forEach((card) => params.append('project_ids[]', card.dataset.projectId));
-        fetch('/projects/reorder/', {
+        fetch(window.projectAjaxConfig?.orderEndpoint || '/projects/reorder/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',

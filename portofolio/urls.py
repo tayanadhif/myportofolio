@@ -20,6 +20,11 @@ urlpatterns = [
     path('', include('main.urls')),
 ]
 
+urlpatterns += [
+    path('api/v1/', include('main.api_urls')),
+    path('api-auth/', include('rest_framework.urls')),
+]
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 else:

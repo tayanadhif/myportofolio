@@ -513,12 +513,7 @@ class MainTest(TestCase):
 
 	def test_delete_project_ajax_returns_success_json(self):
 		User = get_user_model()
-		user = User.objects.create_user(username="delete-editor", password="strongpass123")
-		content_type = ContentType.objects.get(app_label="main", model="portfolioitem")
-		editor_group = Group.objects.create(name="Delete Editor")
-		for codename in ["add_portfolioitem", "change_portfolioitem", "delete_portfolioitem"]:
-			editor_group.permissions.add(Permission.objects.get(content_type=content_type, codename=codename))
-		user.groups.add(editor_group)
+		user = User.objects.create_superuser(username="delete-owner", password="strongpass123")
 		self.client.force_login(user)
 		project = PortfolioItem.objects.create(
 			title="Delete Me",
@@ -596,12 +591,7 @@ class MainTest(TestCase):
 
 	def test_project_form_strips_malicious_html_from_title(self):
 		User = get_user_model()
-		user = User.objects.create_user(username="xss-editor", password="strongpass123")
-		content_type = ContentType.objects.get(app_label="main", model="portfolioitem")
-		editor_group = Group.objects.create(name="Editor")
-		for codename in ["add_portfolioitem", "change_portfolioitem", "delete_portfolioitem"]:
-			editor_group.permissions.add(Permission.objects.get(content_type=content_type, codename=codename))
-		user.groups.add(editor_group)
+		user = User.objects.create_superuser(username="xss-owner", password="strongpass123")
 		self.client.force_login(user)
 
 		response = self.client.post(
@@ -643,14 +633,19 @@ class MainTest(TestCase):
 		self.assertEqual(member_response.status_code, 403)
 		self.assertEqual(member_response.json()["status"], "error")
 
-		editor = get_user_model().objects.create_user(username="ajax-editor", password="strongpass123")
 		content_type = ContentType.objects.get(app_label="main", model="portfolioitem")
 		editor_group = Group.objects.create(name="Editor")
 		for codename in ["add_portfolioitem", "change_portfolioitem", "delete_portfolioitem"]:
 			editor_group.permissions.add(Permission.objects.get(content_type=content_type, codename=codename))
+		editor = get_user_model().objects.create_user(username="ajax-editor", password="strongpass123")
 		editor.groups.add(editor_group)
 		self.client.force_login(editor)
+		editor_response = self.client.post(endpoint, {"title": "Blocked"})
+		self.assertEqual(editor_response.status_code, 403)
+		self.assertFalse(PortfolioItem.objects.filter(title="Blocked").exists())
 
+		owner = get_user_model().objects.create_superuser(username="ajax-owner", password="strongpass123")
+		self.client.force_login(owner)
 		invalid_response = self.client.post(endpoint, {"title": ""})
 		self.assertEqual(invalid_response.status_code, 400)
 		self.assertIn("title", invalid_response.json()["errors"])
@@ -706,7 +701,7 @@ class MainTest(TestCase):
 		project_response = self.client.get(reverse("main:create_project"))
 		self.assertEqual(project_response.status_code, 403)
 
-	def test_editor_group_permissions_show_management_controls(self):
+	def test_editor_group_permissions_show_only_update_controls_for_projects(self):
 		User = get_user_model()
 		content_type = ContentType.objects.get(app_label="main", model="portfolioitem")
 		editor_group = Group.objects.create(name="Editor")
@@ -724,5 +719,6 @@ class MainTest(TestCase):
 
 		project_response = self.client.get(reverse("main:show_projects"))
 		self.assertEqual(project_response.status_code, 200)
-		self.assertContains(project_response, "Tambah Project")
-		self.assertContains(project_response, "canDelete: true")
+		self.assertContains(project_response, "canEdit: true")
+		self.assertContains(project_response, "canDelete: false")
+		self.assertNotContains(project_response, "Tambah Project")

@@ -11,7 +11,7 @@
             <p class="section-kicker">Karya yang saya bangun</p>
 
             <div class="project-header">
-                {% if user.is_authenticated and perms.main.add_portfolioitem %}
+                {% if user.is_superuser %}
                     <h1>Projects</h1>
                     <button type="button"
                             id="open-project-modal"
@@ -68,7 +68,7 @@
     </section>
 </main>
 
-{% if user.is_authenticated and perms.main.add_portfolioitem %}
+{% if user.is_superuser %}
 <div id="project-modal" class="project-modal hidden" role="dialog" aria-modal="true" aria-labelledby="project-modal-title">
     <div class="project-modal__backdrop" data-close-project-modal="true"></div>
     <div class="project-modal__content">
@@ -92,14 +92,18 @@
 </div>
 {% endif %}
 
+{% csrf_token %}
 <script>
     window.projectOrderCsrf = "{{ csrf_token }}";
     window.projectAjaxConfig = {
-        projectsEndpoint: "{% url 'main:get_projects_json' %}",
+        projectsEndpoint: "{% url 'api:project-list' %}",
+        detailProjectEndpoint: "{% url 'api:project-detail' '00000000-0000-0000-0000-000000000000' %}",
+        starProjectEndpoint: "{% url 'api:project-star' '00000000-0000-0000-0000-000000000000' %}",
         canEdit: {{ user_can_edit|yesno:"true,false" }},
-        canDelete: {{ user_can_delete|yesno:"true,false" }},
+        canDelete: {{ user.is_superuser|yesno:"true,false" }},
+        isAuthenticated: {{ user.is_authenticated|yesno:"true,false" }},
         canComment: {{ user.is_authenticated|yesno:"true,false" }},
-        createProjectEndpoint: "{% url 'main:create_project_ajax' %}",
+        createProjectEndpoint: "{% url 'api:project-list' %}",
         updateBaseUrl: "{% url 'main:update_project' '00000000-0000-0000-0000-000000000000' %}",
         deleteBaseUrl: "{% url 'main:delete_project' '00000000-0000-0000-0000-000000000000' %}",
         toggleStarBaseUrl: "{% url 'main:toggle_star' '00000000-0000-0000-0000-000000000000' %}",

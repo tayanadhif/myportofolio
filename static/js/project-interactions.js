@@ -18,7 +18,37 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    const projectApiUrl = window.projectAjaxConfig?.projectsEndpoint || '/api/projects/';
+    const projectApiUrl = window.projectAjaxConfig?.projectsEndpoint || '/api/v1/projects/';
+    let projectsAbortController;
+
+    const getCookie = (name) => {
+        const prefix = `${name}=`;
+        const cookie = document.cookie.split(';').map((value) => value.trim())
+            .find((value) => value.startsWith(prefix));
+        return cookie ? decodeURIComponent(cookie.slice(prefix.length)) : null;
+    };
+
+    const apiRequest = async (url, options = {}) => {
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                Accept: 'application/json',
+                ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+                ...(options.method && options.method !== 'GET'
+                    ? { 'X-CSRFToken': getCookie('csrftoken') || window.projectAjaxConfig?.csrfToken || '' }
+                    : {}),
+                ...options.headers,
+            },
+        });
+        if (response.status === 204) return null;
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            const detail = Object.values(payload).flat()
+                .filter((value) => typeof value === 'string').join(' ');
+            throw new Error(detail || `Request failed (HTTP ${response.status}).`);
+        }
+        return payload;
+    };
 
     const setProjectState = (state) => {
         if (loadingState) loadingState.hidden = state !== 'loading';
@@ -42,7 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
         card.draggable = (window.projectAjaxConfig && window.projectAjaxConfig.canEdit === true) ? 'true' : 'false';
 
         const safeProjectId = escapeHtml(project.id || '');
-        const safeCsrfToken = escapeHtml(window.projectAjaxConfig?.csrfToken || '');
         const safeStarCount = escapeHtml(project.star_count || 0);
         const safeCommentCount = escapeHtml(project.comment_count || 0);
         const commentsUrl = window.projectAjaxConfig?.commentsBaseUrl
@@ -65,12 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
             `);
         }
 
-        const starForm = `
-            <form method="post" action="${project.id ? `/projects/${safeProjectId}/star/` : '#'}" data-star-form="true">
-                <input type="hidden" name="csrfmiddlewaretoken" value="${safeCsrfToken}">
-                <button type="submit" class="button button-secondary">${starLabel}</button>
-            </form>
-        `;
+        const starButton = window.projectAjaxConfig?.isAuthenticated
+            ? `<button type="button" class="button button-secondary" data-star-project-id="${safeProjectId}">${starLabel} (${safeStarCount})</button>`
+            : `<a href="/login/" class="button button-secondary">${starLabel} (${safeStarCount})</a>`;
 
         card.innerHTML = `
             ${window.projectAjaxConfig && window.projectAjaxConfig.canEdit ? '<div class="project-card-header"><span class="drag-handle" aria-label="Geser project" title="Geser project">⋮⋮</span></div>' : ''}
@@ -82,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="project-actions">
                     ${projectUrl}
                     <span class="star-count">★ ${safeStarCount}</span>
-                    ${starForm}
+                    ${starButton}
                     ${actionButtons.join('')}
                 </div>
             </div>
@@ -133,6 +159,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const fetchProjects = () => {
+        if (projectsAbortController) projectsAbortController.abort();
+        projectsAbortController = new AbortController();
+        const requestController = projectsAbortController;
         setProjectState('loading');
         const params = new URLSearchParams();
         const searchValue = searchInput ? searchInput.value.trim() : '';
@@ -143,15 +172,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (categoryValue) params.set('category', categoryValue);
         if (sortValue) params.set('sort', sortValue);
 
-        fetch(`${projectApiUrl}?${params.toString()}`)
+        fetch(`${projectApiUrl}?${params.toString()}`, {
+            headers: { Accept: 'application/json' },
+            signal: requestController.signal,
+        })
             .then((response) => {
                 if (!response.ok) {
-                    throw new Error('Project request failed');
+                    throw new Error(`Project request failed (HTTP ${response.status}).`);
                 }
                 return response.json();
             })
             .then((data) => renderProjectList(Array.isArray(data) ? data : []))
             .catch(() => {
+                if (requestController.signal.aborted) return;
                 projectGrid.innerHTML = '';
                 if (projectCount) {
                     projectCount.textContent = '0';
@@ -227,86 +260,49 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
 
             const formData = new FormData(projectCreateForm);
+            const payload = Object.fromEntries(
+                ['title', 'description', 'tech_stack', 'project_url', 'project_image_url']
+                    .map((name) => [name, formData.get(name)]),
+            );
             const endpoint = window.projectAjaxConfig?.createProjectEndpoint || projectCreateForm.action;
-            fetch(endpoint, {
+            apiRequest(endpoint, {
                 method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': window.projectAjaxConfig?.csrfToken || '',
-                },
-                body: formData,
+                body: JSON.stringify(payload),
             })
-            .then((response) => response.json().then((payload) => ({ status: response.status, payload })))
-            .then(({ status, payload }) => {
+            .then(() => {
                 projectCreateForm.querySelectorAll('[data-error-for]').forEach((fieldError) => {
                     fieldError.textContent = '';
                 });
-
-                if (status !== 201) {
-                    Object.entries(payload.errors || {}).forEach(([field, errors]) => {
-                        const fieldError = projectCreateForm.querySelector(`[data-error-for="${field}"]`);
-                        if (fieldError) {
-                            const list = Array.isArray(errors) ? errors : [errors];
-                            fieldError.textContent = list.map((error) => error.message || error).join(', ');
-                        }
-                    });
-                    if (window.showToast) {
-                        window.showToast('Gagal', payload.message || 'Project gagal ditambahkan.', 'error');
-                    }
-                    return;
-                }
-
                 projectCreateForm.reset();
                 setModalVisibility(false);
                 fetchProjects();
                 if (window.showToast) {
-                    window.showToast('Berhasil', payload.message || 'Project berhasil ditambahkan!', 'success');
+                    window.showToast('Berhasil', 'Project berhasil ditambahkan!', 'success');
                 }
             })
-            .catch(() => {
+            .catch((error) => {
                 if (window.showToast) {
-                    window.showToast('Gagal', 'Tidak dapat terhubung ke server. Silakan coba lagi.', 'error');
+                    window.showToast('Gagal', error.message || 'Tidak dapat terhubung ke server. Silakan coba lagi.', 'error');
                 }
             });
         });
     }
 
-    const parseAjaxResponse = (response) => response.json()
-        .catch(() => ({}))
-        .then((payload) => ({ status: response.status, payload }));
-
-    projectGrid.addEventListener('submit', (event) => {
-        const starForm = event.target.closest('[data-star-form="true"]');
-        if (!starForm) {
+    projectGrid.addEventListener('click', (event) => {
+        const starButton = event.target.closest('[data-star-project-id]');
+        if (starButton) {
+            const endpoint = window.projectAjaxConfig.starProjectEndpoint.replace(
+                '00000000-0000-0000-0000-000000000000', starButton.dataset.starProjectId,
+            );
+            starButton.disabled = true;
+            apiRequest(endpoint, { method: 'POST' })
+                .then(() => fetchProjects())
+                .then(() => window.showToast?.('Berhasil', 'Status star diperbarui.', 'success'))
+                .catch((error) => window.showToast?.('Gagal', error.message, 'error'))
+                .finally(() => { starButton.disabled = false; });
             return;
         }
 
-        event.preventDefault();
-        fetch(starForm.action, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': window.projectAjaxConfig?.csrfToken || '',
-            },
-        })
-            .then(parseAjaxResponse)
-            .then(({ status, payload }) => {
-                if (status !== 200) {
-                    throw new Error(payload.message || 'Star project gagal diperbarui.');
-                }
-                if (window.showToast) {
-                    window.showToast('Berhasil', payload.message || 'Status star diperbarui.', 'success');
-                }
-                fetchProjects();
-            })
-            .catch((error) => {
-                if (window.showToast) {
-                    window.showToast('Gagal', error.message || 'Tidak dapat memperbarui star project.', 'error');
-                }
-            });
-    });
-
-    projectGrid.addEventListener('click', (event) => {
         const deleteButton = event.target.closest('[data-delete-project-id]');
         if (!deleteButton) {
             return;
@@ -317,26 +313,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const endpoint = window.projectAjaxConfig.deleteBaseUrl.replace(
+        const endpoint = window.projectAjaxConfig.detailProjectEndpoint.replace(
             '00000000-0000-0000-0000-000000000000',
             projectId,
         );
 
         deleteButton.disabled = true;
-        fetch(endpoint, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': window.projectAjaxConfig?.csrfToken || '',
-            },
-        })
-            .then(parseAjaxResponse)
-            .then(({ status, payload }) => {
-                if (status !== 200) {
-                    throw new Error(payload.message || 'Project gagal dihapus.');
-                }
+        apiRequest(endpoint, { method: 'DELETE' })
+            .then(() => {
                 if (window.showToast) {
-                    window.showToast('Berhasil', payload.message || 'Project berhasil dihapus.', 'success');
+                    window.showToast('Berhasil', 'Project berhasil dihapus.', 'success');
                 }
                 fetchProjects();
             })

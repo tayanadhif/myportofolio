@@ -64,6 +64,16 @@ def editor_required(view_func):
     return _wrapped_view
 
 
+def superuser_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_superuser:
+            raise PermissionDenied
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped_view
+
+
 def show_main(request):
     last_login = request.COOKIES.get("last_login")
     if not last_login:
@@ -562,7 +572,7 @@ def get_projects_xml(request):
 
 
 @login_required
-@permission_required("main.add_portfolioitem", raise_exception=True)
+@superuser_required
 def create_project(request):
     form = PortfolioItemForm(request.POST or None)
 
@@ -662,7 +672,7 @@ def show_projects_deserialized(request):
 
 
 @login_required
-@editor_required
+@superuser_required
 def delete_project(request, project_id):
     portfolio_item = get_object_or_404(PortfolioItem, pk=project_id)
 
@@ -832,7 +842,7 @@ def update_project_order(request):
 
 @require_POST
 def create_project_ajax(request):
-    if not request.user.is_authenticated or not request.user.has_perm("main.add_portfolioitem"):
+    if not request.user.is_authenticated or not request.user.is_superuser:
         return JsonResponse(
             {"status": "error", "message": "Kamu tidak memiliki izin untuk menambahkan project."},
             status=403,

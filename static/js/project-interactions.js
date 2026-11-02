@@ -74,6 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
         card.draggable = false;
 
         const safeProjectId = escapeHtml(project.id || '');
+        const safeCsrfToken = escapeHtml(
+            window.projectAjaxConfig?.csrfToken || getCookie('csrftoken') || '',
+        );
         const safeStarCount = escapeHtml(project.star_count || 0);
         const safeCommentCount = escapeHtml(project.comment_count || 0);
         const commentsUrl = window.projectAjaxConfig?.commentsBaseUrl

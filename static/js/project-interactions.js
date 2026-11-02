@@ -185,11 +185,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 return response.json();
             })
             .then((data) => renderProjectList(Array.isArray(data) ? data : []))
-            .catch(() => {
+            .catch((error) => {
                 if (requestController.signal.aborted) return;
+                console.error('Failed to load projects:', error);
                 projectGrid.innerHTML = '';
                 if (projectCount) {
                     projectCount.textContent = '0';
+                }
+                if (errorState) {
+                    const detail = error instanceof TypeError
+                        ? 'Tidak dapat terhubung ke server.'
+                        : error.message;
+                    errorState.textContent = `Project gagal dimuat. ${detail} Silakan coba lagi.`;
                 }
                 setProjectState('error');
             });

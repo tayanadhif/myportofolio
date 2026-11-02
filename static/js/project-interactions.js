@@ -346,78 +346,68 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     });
 
-    const cards = Array.from(projectGrid.querySelectorAll('.experience-card'));
     let draggedItemId = null;
 
-    cards.forEach((card) => {
-        if (card.draggable !== true && card.draggable !== 'true') {
-            return;
-        }
+    projectGrid.addEventListener('dragstart', (event) => {
+        const card = event.target.closest('.experience-card');
+        if (!card || !card.draggable) return;
+        draggedItemId = card.dataset.projectId;
+        card.classList.add('dragging');
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', draggedItemId);
+    });
 
-        card.addEventListener('dragstart', (event) => {
-            draggedItemId = card.dataset.projectId;
-            card.classList.add('dragging');
-            event.dataTransfer.effectAllowed = 'move';
-            event.dataTransfer.setData('text/plain', draggedItemId);
+    projectGrid.addEventListener('dragover', (event) => {
+        const card = event.target.closest('.experience-card');
+        if (!card || !draggedItemId || !card.draggable) return;
+        event.preventDefault();
+        card.classList.add('drag-over');
+    });
+
+    projectGrid.addEventListener('dragleave', (event) => {
+        const card = event.target.closest('.experience-card');
+        if (card && !card.contains(event.relatedTarget)) card.classList.remove('drag-over');
+    });
+
+    projectGrid.addEventListener('drop', (event) => {
+        const targetCard = event.target.closest('.experience-card');
+        if (!targetCard || !draggedItemId || !targetCard.draggable) return;
+        event.preventDefault();
+        targetCard.classList.remove('drag-over');
+
+        if (draggedItemId === targetCard.dataset.projectId) return;
+
+        const cardsAfterReorder = Array.from(projectGrid.querySelectorAll('.experience-card'));
+        const sourceIndex = cardsAfterReorder.findIndex((item) => item.dataset.projectId === draggedItemId);
+        const targetIndex = cardsAfterReorder.findIndex((item) => item.dataset.projectId === targetCard.dataset.projectId);
+        if (sourceIndex === -1 || targetIndex === -1) return;
+
+        const [movedCard] = cardsAfterReorder.splice(sourceIndex, 1);
+        cardsAfterReorder.splice(targetIndex, 0, movedCard);
+        cardsAfterReorder.forEach((item) => projectGrid.appendChild(item));
+
+        const params = new URLSearchParams();
+        cardsAfterReorder.forEach((card) => params.append('project_ids[]', card.dataset.projectId));
+        fetch('/projects/reorder/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-CSRFToken': window.projectOrderCsrf || getCookie('csrftoken') || '',
+            },
+            body: params.toString(),
+        }).then((response) => {
+            if (!response.ok) throw new Error('Could not save project order.');
+        }).catch(() => {
+            window.location.reload();
         });
+    });
 
-        card.addEventListener('dragover', (event) => {
-            event.preventDefault();
-            card.classList.add('drag-over');
-        });
-
-        card.addEventListener('dragleave', () => {
-            card.classList.remove('drag-over');
-        });
-
-        card.addEventListener('drop', (event) => {
-            event.preventDefault();
-            card.classList.remove('drag-over');
-
-            if (!draggedItemId || draggedItemId === card.dataset.projectId) {
-                return;
-            }
-
-            const sourceCard = projectGrid.querySelector(`.experience-card[data-project-id="${draggedItemId}"]`);
-            if (!sourceCard) {
-                return;
-            }
-
-            const cardsAfterReorder = Array.from(projectGrid.querySelectorAll('.experience-card'));
-            const sourceIndex = cardsAfterReorder.findIndex((item) => item.dataset.projectId === draggedItemId);
-            const targetIndex = cardsAfterReorder.findIndex((item) => item.dataset.projectId === card.dataset.projectId);
-
-            if (sourceIndex === -1 || targetIndex === -1) {
-                return;
-            }
-
-            const [movedCard] = cardsAfterReorder.splice(sourceIndex, 1);
-            cardsAfterReorder.splice(targetIndex, 0, movedCard);
-            cardsAfterReorder.forEach((item) => projectGrid.appendChild(item));
-
-            const projectOrder = cardsAfterReorder.map((item) => item.dataset.projectId).filter(Boolean);
-            const csrfToken = window.projectOrderCsrf || '';
-            const params = new URLSearchParams();
-            projectOrder.forEach((projectId) => params.append('project_ids[]', projectId));
-
-            fetch('/projects/reorder/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                    'X-CSRFToken': csrfToken,
-                },
-                body: params.toString(),
-            }).catch(() => {
-                window.location.reload();
-            });
-
-            draggedItemId = null;
-        });
-
-        card.addEventListener('dragend', () => {
-            card.classList.remove('dragging');
-            draggedItemId = null;
-            Array.from(projectGrid.querySelectorAll('.experience-card')).forEach((item) => item.classList.remove('drag-over'));
+    projectGrid.addEventListener('dragend', (event) => {
+        const card = event.target.closest('.experience-card');
+        if (card) card.classList.remove('dragging');
+        draggedItemId = null;
+        projectGrid.querySelectorAll('.experience-card').forEach((item) => {
+            item.classList.remove('drag-over');
         });
     });
 

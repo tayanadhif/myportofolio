@@ -309,8 +309,11 @@ def show_projects(request):
         .distinct()
     )
 
-    user_can_edit = request.user.is_authenticated and user_has_editor_access(request.user)
-    user_can_delete = request.user.is_authenticated and user_has_editor_access(request.user)
+    user_can_edit = (
+        request.user.is_authenticated
+        and (request.user.is_superuser or request.user.has_perm("main.change_portfolioitem"))
+    )
+    user_can_delete = request.user.is_superuser
 
     context = {
         "name": "Nadhif Aydin Adinandra",

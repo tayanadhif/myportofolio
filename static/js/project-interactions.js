@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const openProjectModalButton = document.getElementById('open-project-modal');
     const closeProjectModalButton = document.getElementById('close-project-modal');
     const projectCreateForm = document.getElementById('project-create-form');
+    const projectFormTitle = document.getElementById('project-modal-title');
+    const projectFormSubmit = document.getElementById('project-form-submit');
 
     if (!projectGrid) {
         return;
@@ -88,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const actionButtons = [];
 
         if (window.projectAjaxConfig && window.projectAjaxConfig.canEdit) {
-            actionButtons.push(`<a href="${project.id ? `/projects/${safeProjectId}/update/` : '#'}" class="button button-secondary">Edit</a>`);
+            actionButtons.push(`<button type="button" class="button button-secondary" data-edit-project-id="${safeProjectId}">Edit</button>`);
         }
 
         if (window.projectAjaxConfig && window.projectAjaxConfig.canDelete) {
@@ -163,6 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setProjectState('ready');
     };
 
+    let loadedProjects = [];
     const fetchProjects = () => {
         if (projectsAbortController) projectsAbortController.abort();
         projectsAbortController = new AbortController();
@@ -187,7 +190,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 return response.json();
             })
-            .then((data) => renderProjectList(Array.isArray(data) ? data : []))
+            .then((data) => {
+                loadedProjects = Array.isArray(data) ? data : [];
+                renderProjectList(loadedProjects);
+            })
             .catch((error) => {
                 if (requestController.signal.aborted) return;
                 console.error('Failed to load projects:', error);
@@ -276,9 +282,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 ['title', 'description', 'tech_stack', 'project_url', 'project_image_url']
                     .map((name) => [name, formData.get(name)]),
             );
-            const endpoint = window.projectAjaxConfig?.createProjectEndpoint || projectCreateForm.action;
+            const editingId = projectCreateForm.dataset.editingId;
+            const endpoint = editingId
+                ? window.projectAjaxConfig.detailProjectEndpoint.replace('00000000-0000-0000-0000-000000000000', editingId)
+                : (window.projectAjaxConfig?.createProjectEndpoint || projectCreateForm.action);
             apiRequest(endpoint, {
-                method: 'POST',
+                method: editingId ? 'PATCH' : 'POST',
                 body: JSON.stringify(payload),
             })
             .then(() => {
@@ -286,10 +295,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     fieldError.textContent = '';
                 });
                 projectCreateForm.reset();
+                delete projectCreateForm.dataset.editingId;
+                if (projectFormTitle) projectFormTitle.textContent = 'Tambah Project';
+                if (projectFormSubmit) projectFormSubmit.textContent = 'Tambah Project';
                 setModalVisibility(false);
                 fetchProjects();
                 if (window.showToast) {
-                    window.showToast('Berhasil', 'Project berhasil ditambahkan!', 'success');
+                    window.showToast('Berhasil', editingId ? 'Project berhasil diperbarui.' : 'Project berhasil ditambahkan!', 'success');
                 }
             })
             .catch((error) => {
@@ -301,6 +313,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     projectGrid.addEventListener('click', (event) => {
+        const editButton = event.target.closest('[data-edit-project-id]');
+        if (editButton) {
+            const project = loadedProjects.find((item) => item.id === editButton.dataset.editProjectId);
+            if (!project || !projectCreateForm) return;
+            projectCreateForm.reset();
+            ['title', 'description', 'tech_stack', 'project_url', 'project_image_url'].forEach((name) => {
+                const field = projectCreateForm.elements.namedItem(name);
+                if (field) field.value = project[name] || '';
+            });
+            projectCreateForm.dataset.editingId = project.id;
+            if (projectFormTitle) projectFormTitle.textContent = 'Edit Project';
+            if (projectFormSubmit) projectFormSubmit.textContent = 'Simpan Perubahan';
+            setModalVisibility(true);
+            return;
+        }
+
         const starButton = event.target.closest('[data-star-project-id]');
         if (starButton) {
             if (!window.projectAjaxConfig?.isAuthenticated) {
@@ -315,10 +343,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(() => fetchProjects())
                 .then(() => window.showToast?.('Berhasil', 'Status star diperbarui.', 'success'))
                 .catch((error) => {
-                    if (error.status === 403) {
-                        window.location.assign(window.projectAjaxConfig?.loginUrl || '/login/');
-                        return;
-                    }
                     window.showToast?.('Gagal', error.message, 'error');
                 })
                 .finally(() => { starButton.disabled = false; });

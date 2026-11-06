@@ -10,9 +10,13 @@ class IsPortfolioOwnerOrEditorOrReadOnly(BasePermission):
         user = request.user
         if not user.is_authenticated:
             return False
-        if user.is_superuser:
-            return True
-        return (
-            request.method in ("PUT", "PATCH")
-            and user.has_perm("main.change_portfolioitem")
-        )
+        if request.method == "POST":
+            return user.is_superuser
+        if request.method in ("PUT", "PATCH"):
+            return (
+                user.is_superuser
+                or user.has_perm("main.change_portfolioitem")
+            )
+        if request.method == "DELETE":
+            return user.is_superuser
+        return False

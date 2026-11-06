@@ -49,9 +49,12 @@ class PortfolioItemAPITest(APITestCase):
         for user in (None, self.visitor):
             self.client.force_authenticate(user=user)
             self.assertEqual(self.client.post(self.list_url, self.payload, format="json").status_code, 403)
+            self.assertEqual(PortfolioItem.objects.count(), 1)
             self.assertEqual(self.client.patch(self.detail_url, {"title": "Changed"}, format="json").status_code, 403)
+            self.item.refresh_from_db()
+            self.assertEqual(self.item.title, "Portfolio")
             self.assertEqual(self.client.delete(self.detail_url).status_code, 403)
-        self.assertEqual(PortfolioItem.objects.count(), 1)
+            self.assertTrue(PortfolioItem.objects.filter(pk=self.item.pk).exists())
 
     def test_owner_can_create(self):
         self.client.force_authenticate(user=self.owner)
@@ -74,6 +77,8 @@ class PortfolioItemAPITest(APITestCase):
             response = self.client.post(self.list_url, {**self.payload, **changes}, format="json")
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertIn(field, response.data)
+            self.assertEqual(PortfolioItem.objects.count(), 2)
+            self.assertFalse(PortfolioItem.objects.filter(title="   ").exists())
 
     def test_patch_put_and_delete(self):
         self.client.force_authenticate(user=self.owner)
@@ -88,15 +93,24 @@ class PortfolioItemAPITest(APITestCase):
         self.assertEqual(response.content, b"")
         self.assertFalse(PortfolioItem.objects.filter(pk=self.item.id).exists())
 
+    def test_owner_can_delete(self):
+        self.client.force_authenticate(user=self.owner)
+        response = self.client.delete(self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(PortfolioItem.objects.filter(pk=self.item.pk).exists())
+
     def test_star_requires_login_and_toggles(self):
         self.assertEqual(self.client.post(self.star_url).status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(self.item.starred_by.count(), 0)
         self.client.force_authenticate(user=self.visitor)
         response = self.client.post(self.star_url)
         self.assertTrue(response.data["is_starred"])
         self.assertEqual(response.data["star_count"], 1)
+        self.assertEqual(list(self.item.starred_by.all()), [self.visitor])
         response = self.client.post(self.star_url)
         self.assertFalse(response.data["is_starred"])
         self.assertEqual(response.data["star_count"], 0)
+        self.assertEqual(self.item.starred_by.count(), 0)
 
     def test_computed_fields_are_read_only(self):
         self.client.force_authenticate(user=self.owner)
@@ -116,8 +130,12 @@ class PortfolioItemAPITest(APITestCase):
         self.visitor.groups.add(editor_group)
         self.client.force_authenticate(user=self.visitor)
         self.assertEqual(self.client.patch(self.detail_url, {"title": "Editor title"}, format="json").status_code, 200)
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.title, "Editor title")
         self.assertEqual(self.client.post(self.list_url, self.payload, format="json").status_code, 403)
+        self.assertEqual(PortfolioItem.objects.count(), 1)
         self.assertEqual(self.client.delete(self.detail_url).status_code, 403)
+        self.assertTrue(PortfolioItem.objects.filter(pk=self.item.pk).exists())
 
     def test_wrong_method(self):
         self.client.force_authenticate(user=self.owner)
@@ -129,6 +147,7 @@ class PortfolioItemAPITest(APITestCase):
         response = client.post(self.list_url, self.payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(PortfolioItem.objects.count(), 1)
+        self.assertFalse(PortfolioItem.objects.filter(title=self.payload["title"]).exists())
 
     def test_session_write_with_csrf_succeeds(self):
         client = APIClient(enforce_csrf_checks=True)

@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) {
-            throw new Error(payload.message || 'Request failed.');
+            throw new Error(payload.message || `Request failed (HTTP ${response.status}).`);
         }
         return payload;
     };
@@ -277,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const refreshChat = async () => {
         try {
             const response = await fetch(chatUrl);
-            if (!response.ok) throw new Error('Could not load community messages.');
+            if (!response.ok) throw new Error(`Could not load community messages (HTTP ${response.status}).`);
             const messages = await response.json();
             const snapshot = JSON.stringify(messages);
             if (snapshot !== lastChatSnapshot) {
@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: new FormData(chatForm),
                 });
                 const payload = await response.json().catch(() => ({}));
-                if (!response.ok) throw new Error(payload.message || 'Request failed.');
+                if (!response.ok) throw new Error(payload.message || `Request failed (HTTP ${response.status}).`);
                 chatInput.value = '';
                 chatForm.elements.attachment.value = '';
                 showSuccess('Message sent.');

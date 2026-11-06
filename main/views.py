@@ -393,14 +393,15 @@ def _profile_image_url(user):
 def _discussion_payload(item, user):
     profile_image_url = _profile_image_url(item.user)
 
+    attachment = item.attachment if isinstance(item, ChatMessage) else None
     has_attachment = bool(
-        item.attachment
-        and item.attachment.storage.exists(item.attachment.name)
+        attachment
+        and attachment.storage.exists(attachment.name)
     )
-    attachment_url = item.attachment.url if has_attachment else None
+    attachment_url = attachment.url if has_attachment else None
     attachment_type = (
         "video"
-        if has_attachment and Path(item.attachment.name).suffix.lower() in {".mp4", ".webm", ".mov"}
+        if has_attachment and Path(attachment.name).suffix.lower() in {".mp4", ".webm", ".mov"}
         else "image"
     )
 

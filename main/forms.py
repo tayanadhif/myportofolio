@@ -6,6 +6,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.forms import CharField, ChoiceField, ModelForm, TextInput, Textarea, URLInput, inlineformset_factory
 from django.utils.html import strip_tags
+from django.utils import timezone
 
 from main.models import PortfolioItem, ProjectSubmission, UserConnection, UserProfile
 
@@ -55,11 +56,21 @@ class UserProfileForm(ModelForm):
             "bio": Textarea(attrs={"rows": 4, "placeholder": "Tell us a little about yourself"}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["date_of_birth"].widget.attrs["max"] = timezone.localdate().isoformat()
+
     def clean_profile_image(self):
         image = self.cleaned_data.get("profile_image")
         if image and image.size > 5 * 1024 * 1024:
             raise forms.ValidationError("Profile picture must be 5 MB or smaller.")
         return image
+
+    def clean_date_of_birth(self):
+        date_of_birth = self.cleaned_data.get("date_of_birth")
+        if date_of_birth and date_of_birth > timezone.localdate():
+            raise forms.ValidationError("Date of birth cannot be in the future.")
+        return date_of_birth
 
     def clean_bio(self):
         return strip_tags(self.cleaned_data.get("bio", ""))

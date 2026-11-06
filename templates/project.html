@@ -73,7 +73,7 @@
     <div class="project-modal__backdrop" data-close-project-modal="true"></div>
     <div class="project-modal__content">
         <button type="button" id="close-project-modal" class="project-modal__close" aria-label="Tutup form project">×</button>
-        <h2 id="project-modal-title">Tambah Project</h2>
+        <h2 id="project-modal-title">{% if user.is_superuser %}Tambah Project{% else %}Edit Project{% endif %}</h2>
         <form id="project-create-form" method="post" action="{% url 'api:project-list' %}" novalidate>
             {% csrf_token %}
             {% for field in project_form %}
@@ -84,7 +84,7 @@
             </div>
             {% endfor %}
             <div class="form-actions">
-                <button type="submit" class="button" id="project-form-submit">Tambah Project</button>
+                <button type="submit" class="button" id="project-form-submit">{% if user.is_superuser %}Tambah Project{% else %}Simpan Perubahan{% endif %}</button>
                 <button type="button" class="button button-secondary" data-close-project-modal="true">Batal</button>
             </div>
         </form>

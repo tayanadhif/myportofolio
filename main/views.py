@@ -2,6 +2,7 @@ from functools import wraps
 import json
 import logging
 import mimetypes
+from pathlib import Path
 
 from django.conf import settings
 from django.contrib import messages
@@ -387,11 +388,24 @@ def _discussion_payload(item, user):
     except UserProfile.DoesNotExist:
         pass
 
+    has_attachment = bool(
+        item.attachment
+        and item.attachment.storage.exists(item.attachment.name)
+    )
+    attachment_url = item.attachment.url if has_attachment else None
+    attachment_type = (
+        "video"
+        if has_attachment and Path(item.attachment.name).suffix.lower() in {".mp4", ".webm", ".mov"}
+        else "image"
+    )
+
     return {
         "id": item.id,
         "username": item.user.username,
         "profile_image_url": profile_image_url,
         "body": item.body,
+        "attachment_url": attachment_url,
+        "attachment_type": attachment_type if attachment_url else None,
         "reply_to": {
             "username": item.reply_to.user.username,
             "profile_image_url": (
@@ -461,17 +475,32 @@ def chat_messages(request):
         return JsonResponse({"message": "Login untuk mengirim chat."}, status=403)
 
     body = strip_tags(request.POST.get("body", "")).strip()
-    if not body:
-        return JsonResponse({"message": "Pesan tidak boleh kosong."}, status=400)
+    attachment = request.FILES.get("attachment")
+    if not body and not attachment:
+        return JsonResponse({"message": "Tulis pesan atau lampirkan foto/video."}, status=400)
     if len(body) > 2000:
         return JsonResponse({"message": "Pesan maksimal 2000 karakter."}, status=400)
+    if attachment:
+        allowed_types = {
+            ".jpg": {"image/jpeg"}, ".jpeg": {"image/jpeg"}, ".png": {"image/png"},
+            ".gif": {"image/gif"}, ".webp": {"image/webp"},
+            ".mp4": {"video/mp4"}, ".webm": {"video/webm"},
+            ".mov": {"video/quicktime"},
+        }
+        extension = Path(attachment.name).suffix.lower()
+        if extension not in allowed_types or attachment.content_type not in allowed_types[extension]:
+            return JsonResponse({"message": "Lampiran harus berupa foto atau video yang didukung."}, status=400)
+        if attachment.size > 20 * 1024 * 1024:
+            return JsonResponse({"message": "Ukuran lampiran maksimal 20 MB."}, status=400)
 
     reply_to = None
     reply_to_id = request.POST.get("reply_to", "").strip()
     if reply_to_id:
         reply_to = get_object_or_404(ChatMessage, pk=reply_to_id)
 
-    message = ChatMessage.objects.create(user=request.user, body=body, reply_to=reply_to)
+    message = ChatMessage.objects.create(
+        user=request.user, body=body, reply_to=reply_to, attachment=attachment,
+    )
     payload = _discussion_payload(message, request.user)
     payload["email_sent"] = _send_reply_notification(
         request,

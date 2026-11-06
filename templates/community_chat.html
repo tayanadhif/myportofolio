@@ -24,9 +24,10 @@
                 name="body"
                 rows="3"
                 maxlength="2000"
-                required
-                placeholder="Write a message..."
+                placeholder="Write a message or attach a photo/video..."
             ></textarea>
+            <label for="chat-attachment-input">Photo or video (max 20 MB)</label>
+            <input id="chat-attachment-input" type="file" name="attachment" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime">
             <button class="button" type="submit">Send Message</button>
         </form>
         {% else %}

@@ -80,6 +80,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const body = document.createElement('p');
         body.className = 'discussion-item-body';
         body.textContent = item.body;
+        let attachmentElement = null;
+        if (item.attachment_url && item.attachment_type === 'video') {
+            attachmentElement = document.createElement('video');
+            attachmentElement.src = item.attachment_url;
+            attachmentElement.controls = true;
+            attachmentElement.preload = 'metadata';
+            attachmentElement.className = 'chat-attachment chat-attachment-video';
+        } else if (item.attachment_url) {
+            attachmentElement = document.createElement('img');
+            attachmentElement.src = item.attachment_url;
+            attachmentElement.alt = `Photo shared by ${item.username}`;
+            attachmentElement.loading = 'lazy';
+            attachmentElement.className = 'chat-attachment chat-attachment-image';
+        }
         if (item.reply_to) {
             const replyContext = document.createElement('p');
             replyContext.className = 'discussion-reply-context';
@@ -88,6 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             row.append(heading, body);
         }
+        if (attachmentElement) row.appendChild(attachmentElement);
 
         if (item.can_edit || canReply) {
             const actions = document.createElement('div');
@@ -285,8 +300,18 @@ document.addEventListener('DOMContentLoaded', () => {
         chatForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             try {
-                await sendForm(chatUrl, { body: chatInput.value });
+                const response = await fetch(chatUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: new FormData(chatForm),
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(payload.message || 'Request failed.');
                 chatInput.value = '';
+                chatForm.elements.attachment.value = '';
                 showSuccess('Message sent.');
                 await refreshChat();
             } catch (error) {

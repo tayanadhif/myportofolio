@@ -109,7 +109,13 @@ class ChatMessage(models.Model):
     id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chat_messages")
     reply_to = models.ForeignKey("self", blank=True, null=True, on_delete=models.SET_NULL, related_name="replies")
-    body = models.CharField(max_length=2000)
+    body = models.CharField(max_length=2000, blank=True)
+    attachment = models.FileField(
+        upload_to="chat/",
+        storage=DatabaseMediaStorage(),
+        blank=True,
+        null=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

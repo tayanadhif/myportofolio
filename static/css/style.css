@@ -2048,6 +2048,21 @@ body.dark-mode::after {
     white-space: pre-wrap;
 }
 
+.chat-attachment {
+    display: block;
+    max-width: min(100%, 640px);
+    max-height: 420px;
+    margin-top: 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: 0.5rem;
+    object-fit: contain;
+}
+
+.chat-attachment-video {
+    width: 100%;
+    background: #000;
+}
+
 .discussion-reply-context {
     margin: 0 0 0.5rem;
     padding: 0.45rem 0.65rem;

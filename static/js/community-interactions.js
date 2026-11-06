@@ -289,6 +289,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (chatError) chatError.hidden = true;
         } catch (error) {
+            const errorMessage = document.createElement('p');
+            errorMessage.className = 'discussion-empty';
+            errorMessage.textContent = 'Could not load community messages. Retrying automatically...';
+            chatList.replaceChildren(errorMessage);
             if (chatError) {
                 chatError.textContent = error.message;
                 chatError.hidden = false;

@@ -250,6 +250,23 @@ class MainTest(TestCase):
 		self.assertEqual(delete_response.status_code, 200)
 		self.assertFalse(ChatMessage.objects.filter(pk=message_id).exists())
 
+	def test_chat_reply_loads_when_original_author_has_no_profile(self):
+		parent_user = get_user_model().objects.create_user(username="legacy-chat-owner")
+		reply_user = get_user_model().objects.create_user(username="chat-replier")
+		parent = ChatMessage.objects.create(user=parent_user, body="Original message")
+		ChatMessage.objects.create(
+			user=reply_user,
+			body="Reply",
+			reply_to=parent,
+		)
+		UserProfile.objects.filter(user=parent_user).delete()
+
+		response = self.client.get(reverse("main:chat_messages"))
+
+		self.assertEqual(response.status_code, 200)
+		reply_payload = next(message for message in response.json() if message["body"] == "Reply")
+		self.assertIsNone(reply_payload["reply_to"]["profile_image_url"])
+
 	@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
 	def test_chat_reply_sends_email_to_original_message_owner(self):
 		owner = get_user_model().objects.create_user(

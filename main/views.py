@@ -378,15 +378,20 @@ def get_projects_json(request):
     return JsonResponse(data, safe=False)
 
 
-def _discussion_payload(item, user):
-    profile_image_url = None
-
+def _profile_image_url(user):
     try:
-        profile = item.user.profile
-        if profile.profile_image and profile.profile_image.storage.exists(profile.profile_image.name):
-            profile_image_url = profile.profile_image.url
+        profile = user.profile
     except UserProfile.DoesNotExist:
-        pass
+        return None
+
+    image = profile.profile_image
+    if image and image.storage.exists(image.name):
+        return image.url
+    return None
+
+
+def _discussion_payload(item, user):
+    profile_image_url = _profile_image_url(item.user)
 
     has_attachment = bool(
         item.attachment
@@ -408,14 +413,7 @@ def _discussion_payload(item, user):
         "attachment_type": attachment_type if attachment_url else None,
         "reply_to": {
             "username": item.reply_to.user.username,
-            "profile_image_url": (
-                item.reply_to.user.profile.profile_image.url
-                if item.reply_to.user.profile.profile_image
-                and item.reply_to.user.profile.profile_image.storage.exists(
-                    item.reply_to.user.profile.profile_image.name
-                )
-                else None
-            ),
+            "profile_image_url": _profile_image_url(item.reply_to.user),
             "body": item.reply_to.body,
         } if item.reply_to_id else None,
         "created_at": timezone.localtime(item.created_at).strftime("%d %b %Y, %H:%M"),

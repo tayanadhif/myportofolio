@@ -20,7 +20,7 @@ def preserve_existing_data(apps, schema_editor):
 
     old_storage = FileSystemStorage(location=settings.MEDIA_ROOT)
     for profile in UserProfile.objects.using(database).exclude(profile_image="").iterator():
-        name = profile.profile_image
+        name = profile.profile_image.name
         if StoredMedia.objects.using(database).filter(name=name).exists() or not old_storage.exists(name):
             continue
         with old_storage.open(name, "rb") as image_file:
